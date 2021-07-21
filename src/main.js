@@ -12,7 +12,7 @@ axios.defaults.baseURL = 'https://physicsgenie.ga/';
 
 console.log(process.env);
 
-if ('VUE_APP_DEBUG' in process.env)
+if (process.env.VUE_APP_DEBUG && process.env.VUE_APP_DEBUG == 'true')
   axios.defaults.baseURL = 'https://physicsgenie.ga/staging/';
 else
   axios.defaults.baseURL = 'https://physicsgenie.ga/';
