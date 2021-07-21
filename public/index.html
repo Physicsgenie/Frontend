@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="icon" href="<%= BASE_URL %>Favicon.png">
+    <title>Physics Genie</title>
+    <script src="https://use.fontawesome.com/e97a7a61dd.js"></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
+    <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
+    <link href='https://fonts.googleapis.com/css?family=Antic' rel='stylesheet'>
+    <link href='https://fonts.googleapis.com/css?family=Nunito' rel='stylesheet'>
+    <link href='https://fonts.googleapis.com/css?family=Caveat' rel='stylesheet'>
+    <link href='https://fonts.googleapis.com/css?family=Nanum Gothic' rel='stylesheet'>
+    <link href='https://fonts.googleapis.com/css?family=Karla' rel='stylesheet'>
+    <link href='https://fonts.googleapis.com/css?family=Roboto Slab' rel='stylesheet'>
+    <script src="https://www.wiris.net/demo/editor/editor"></script>
+    <style>
+
+      * {
+        margin: 0 ;
+        padding: 0 ;
+        --user-menu-color: #7a90af;
+      }
+
+
+      /* Math Editor Styling */
+      #input {
+        height: 52px;
+        transition: height .5s ease;
+      }
+
+      #input .wrs_panelContainer {
+        height: 0;
+        opacity: 0;
+        position: relative;
+        top: 0;
+        transition: top .4s ease, height .25s ease, opacity .25s ease;
+      }
+
+      #input .wrs_formulaDisplay {
+        height: inherit !important;
+        overflow: hidden !important;
+        padding: 6px;
+      }
+
+      #input .wrs_formulaDisplayWrapper {
+        position: relative;
+        top: 0;
+        transition: top .25s ease;
+      }
+
+
+      #input .wrs_container > .wrs_underlineCaret {
+        display: none;
+      }
+
+      #input .wrs_linksContainer.wrs_noTabs > a {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>
+      <strong>We're sorry but physics-genie doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+    </noscript>
+    <div id="app"></div>
+    <!-- built files will be auto injected -->
+  </body>
+</html>
