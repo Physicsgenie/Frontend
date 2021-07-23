@@ -10,6 +10,12 @@ Vue.use(VueMathfield, MathLive);
 axios.defaults.withCredentials = true;
 axios.defaults.baseURL = 'https://physicsgenie.ga/staging/';
 
+if (process.env.VUE_APP_DEBUG && process.env.VUE_APP_DEBUG === 'true') {
+  console.log("Running on staging server");
+  axios.defaults.baseURL = 'https://physicsgenie.ga/staging/';
+} else {
+  axios.defaults.baseURL = 'https://physicsgenie.ga/';
+}
 
 Vue.config.productionTip = false;
 

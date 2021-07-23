@@ -76,7 +76,7 @@
 
       if (this.$route.params.problem !== undefined) {
 
-        axios.get('/wp-json/physics_genie/problem/' + this.$route.params.problem, {headers: {'Authorization': 'Bearer ' + this.$store.getters.Token}}).then((response) => {
+        axios.get('wp-json/physics_genie/problem/' + this.$route.params.problem, {headers: {'Authorization': 'Bearer ' + this.$store.getters.Token}}).then((response) => {
           if (response.data === "") {
             self.problem = null;
           } else {
