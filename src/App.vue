@@ -1,12 +1,19 @@
 <template>
-  <div id="app">
-    <div class = "background"></div>
+  <div id = "app">
+    <!-- Background -->
+    <div id = "app-background"></div>
+
+    <!-- Router view -->
     <router-view/>
+
+    <!-- Display confirmation messages -->
     <div class = "confirmation" v-for = "confirmation in $store.getters.Confirmations" v-bind:key = "confirmation.id">
       <div>
         <p>{{ confirmation.message }}</p>
       </div>
     </div>
+
+    <!-- Display processing screen -->
     <div id = "processing" v-if = "$store.getters.Processing">
       <h3>Processing</h3>
       <i class = "fa fa-spinner"></i>
@@ -18,15 +25,13 @@
 
   export default {
     name: "App",
-    data() {
-      return {
-
-      }
-    },
     methods: {
+      // onResize, Calls store mutation to reset window height
       onResize: function() {
         this.$store.commit("setWindowHeight");
       },
+
+      // async getData, Calls store actions to retrieve current user's stats+data
       getData: async function() {
         this.$store.dispatch('GetProblemMetadata');
         this.$store.dispatch('GetUserMetadata');
@@ -37,28 +42,33 @@
       }
     },
     mounted() {
+      // Calls onResize on app load and whenever window is resized
       this.onResize();
       window.addEventListener("resize", this.onResize);
+
+      // Clears processing screen when app is loaded/reloaded
       this.$store.commit('setProcessing', false);
+
+      // Gets data again on app load/reload if user is logged in (force data reload on app reload)
       if (this.$store.getters.isAuthenticated) {
         this.getData();
       }
-    },
-    created() {
-
     }
   }
 
 </script>
 
 <style>
+  /* STYLING IS UNSCOPED */
 
+  /* App margin/padding styling */
   #app {
     margin: 0 !important;
     padding: 0 !important;
   }
 
-  .background {
+  /* Background styling */
+  #app-background {
     background: url("assets/Background.png") no-repeat center center fixed;
     background-size: cover;
     position: fixed;
@@ -70,7 +80,7 @@
     z-index: 0;
   }
 
-  /* Confirmation Popup Styling */
+  /* Confirmation popup styling */
   .confirmation {
     position: fixed;
     z-index: 100000;
@@ -99,7 +109,7 @@
     box-shadow: 0 0 8px 0.5px rgba(17, 21, 33, 0.1);
   }
 
-  /* Processing Popup Styling */
+  /* Processing popup styling */
   #processing {
     position: fixed;
     z-index: 100000;
@@ -122,6 +132,7 @@
     animation: rotation 2s infinite linear;
   }
 
+  /* Processing popup animation */
   @keyframes rotation {
     from {
       transform: rotate(0deg);
@@ -131,7 +142,7 @@
     }
   }
 
-  /* Link Styling */
+  /* General link styling */
   .link {
     position: relative;
     color: #285380;
@@ -159,7 +170,7 @@
     left: 10%;
   }
 
-  /* Button Styling */
+  /* General button styling */
   .button {
     height: 44px;
     background: none;

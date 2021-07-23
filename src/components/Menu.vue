@@ -1,34 +1,46 @@
 <template>
   <div class = "container-fluid" id = "play-menu">
+    <!-- Main links -->
     <div class = "flex" id = "links-container">
+      <!-- Home -->
       <router-link to = "/" class = "router-link">
         <div class = "img logo"></div>
         <div class = "text">Home</div>
       </router-link>
+
+      <!-- Play -->
       <router-link to = "/play" class = "router-link">
         <div class = "img problem">
           <i class = "fa fa-cubes" aria-hidden = "true"></i>
         </div>
         <div class = "text">Play</div>
       </router-link>
+
+      <!-- Review -->
       <!--<router-link to = "/review" class = "router-link">-->
         <!--<div class = "img review">-->
           <!--<i class = "fa fa-retweet" aria-hidden = "true"></i>-->
         <!--</div>-->
         <!--<div class = "text">Review</div>-->
       <!--</router-link>-->
+
+      <!-- Setup -->
       <router-link to = "/setup" class = "router-link">
         <div class = "img setup">
           <i class = "fa fa-sliders" aria-hidden = "true"></i>
         </div>
         <div class = "text">Setup</div>
       </router-link>
+
+      <!-- Submit -->
       <router-link to = "/submit" id = "submit-link" class = "router-link" v-if = "$store.getters.Contributor">
         <div class = "img setup">
           <i class = "fa fa-database" aria-hidden = "true" style = "color: #ff845d;"></i>
         </div>
         <div class = "text" style = "color: #ff845d;">Submit</div>
       </router-link>
+
+      <!-- Help (external) -->
       <a href = "https://physicsgenie.ga/help" target = "_blank" class = "router-link">
         <div class = "img help">
           <i class = "fa fa-question" aria-hidden = "true"></i>
@@ -37,6 +49,7 @@
       </a>
     </div>
 
+    <!-- Back to main site (external) -->
     <a href = "https://physicsgenie.ga/" id = "back-home" class = "router-link">
       <i class = "fa fa-long-arrow-left" aria-hidden = "true"></i>
       <div class = "text">Back to Site</div>
@@ -52,7 +65,7 @@
 
 <style scoped>
 
-
+  /* Menu styling */
   #play-menu {
     position: fixed;
     width: 100px;
@@ -128,7 +141,6 @@
     left: 13%;
   }
 
-
   #play-menu .text {
     color: white;
     font-family: "Montserrat", sans-serif;
@@ -150,7 +162,7 @@
     transition: width .4s ease, opacity .1s ease .3s;
   }
 
-
+  /* Back to main site styling */
   #back-home {
     position: absolute;
     bottom: 100px;

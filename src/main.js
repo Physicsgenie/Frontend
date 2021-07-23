@@ -8,7 +8,7 @@ import VueMathfield from 'mathlive/dist/vue-mathlive';
 Vue.use(VueMathfield, MathLive);
 
 axios.defaults.withCredentials = true;
-axios.defaults.baseURL = 'https://physicsgenie.ga/';
+axios.defaults.baseURL = 'https://physicsgenie.ga/staging/';
 
 
 Vue.config.productionTip = false;

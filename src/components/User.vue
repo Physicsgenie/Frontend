@@ -1,15 +1,21 @@
 <template>
   <div id = "user-container">
+    <!-- User summary -->
     <div id = "user" v-on:click = "navigate('')">
       <div class = "img avatar">
         <i class = "fa fa-user-circle-o" aria-hidden = "true"></i>
       </div>
       <div class = "text">{{ user }}</div>
     </div>
+
+    <!-- Dropdown menu (on hover) -->
     <div id = "user-menu">
+      <!-- Problem setup button -->
       <div class = "link-button" v-on:click = "navigate('setup')">
         <div class = "text">Problem Setup</div>
       </div>
+
+      <!-- Logout button -->
       <div class = "link-button" v-on:click = "logOut">
         <i class = "fa fa-power-off" aria-hidden = "true"></i>
         <div class = "text">Logout</div>
@@ -20,19 +26,24 @@
 
 <script>
 
+  // Imports
   import { mapGetters } from "vuex";
 
   export default {
     name: "User",
     computed: {
+      // Map "StateUser" from store to "user" component variable
       ...mapGetters({
         user: 'StateUser'
       })
     },
     methods: {
+      // navigate (place => router-view location to route to when called), push new location to router stack
       navigate: function(place) {
         this.$router.push("/" + place);
       },
+
+      // async logOut, log user out (LogOut store action) and route to login page
       async logOut (){
         await this.$store.dispatch('LogOut');
         this.$router.push('/login');
@@ -43,6 +54,7 @@
 
 <style scoped>
 
+  /* Container styling */
   #user-container {
     position: fixed;
     width: inherit;
@@ -52,6 +64,7 @@
     z-index: 1000;
   }
 
+  /* User summary styling */
   #user {
     border-bottom: 2px solid var(--user-menu-color);
     position: relative;
@@ -101,7 +114,7 @@
     font-size: 22px;
   }
 
-
+  /* User menu styling */
   #user-menu {
     position: relative;
     opacity: 0;
