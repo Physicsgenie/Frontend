@@ -1,5 +1,5 @@
 <template>
-  <div id = "user-container">
+  <div id = "user-container" v-if = "$store.getters.WindowWidth > 700">
     <!-- User summary -->
     <div id = "user" v-on:click = "navigate('')">
       <div class = "img avatar">

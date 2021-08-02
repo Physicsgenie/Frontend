@@ -29,6 +29,7 @@
       // onResize, Calls store mutation to reset window height
       onResize: function() {
         this.$store.commit("setWindowHeight");
+        this.$store.commit("setWindowWidth");
       },
 
       // async getData, Calls store actions to retrieve current user's stats+data

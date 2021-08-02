@@ -4,6 +4,7 @@ const state = {
   processing: false,
   confirmations: [],
   windowHeight: null,
+  windowWidth: null,
   submittedProblems: null,
   problemMetaData: null,
   userSetup: {
@@ -97,13 +98,13 @@ const state = {
   },
   pastAnswers: [],
   result: "",
-  currAnswer: "",
-  WOLFRAM_ID: "8WE72P-EGWA29LPAW"
+  currAnswer: ""
 };
 const getters = {
   Confirmations: state => state.confirmations,
   Processing: state => state.processing,
   WindowHeight: state => state.windowHeight,
+  WindowWidth: state => state.windowWidth,
   UserSetup: state => state.userSetup,
   SubmittedProblems: state => state.submittedProblems,
   UserStats: state => state.userStats,
@@ -114,7 +115,6 @@ const getters = {
   PastAnswers: state => state.pastAnswers,
   CurrAnswer: state => state.currAnswer,
   Result: state => state.result,
-  WOLFRAM_ID: state => state.WOLFRAM_ID
 };
 const actions = {
   async Confirmation({commit}, message) {
@@ -452,6 +452,9 @@ const mutations = {
   },
   setWindowHeight(state) {
     state.windowHeight = window.innerHeight;
+  },
+  setWindowWidth(state) {
+    state.windowWidth = window.innerWidth;
   },
   setUserSetup(state, setup) {
     state.userSetup = setup;
