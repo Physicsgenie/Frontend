@@ -90,7 +90,7 @@
         </div>
 
         <!-- Answer (does not show if result is correct since then it is already shown in student previous answers) -->
-        <div id = "answer" v-if = "result !== 'correct'">Answer: <vue-mathjax class = "correct"  v-bind:formula = "'$' + (problem.answer.substring(0, 5) === '<math' ? Mathml2latex.convert(problem.answer) : problem.answer) + '$'" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></div>
+        <div id = "answer" v-if = "result !== 'correct'">Answer: <vue-mathjax class = "correct"  v-bind:formula = "'$' + problem.answer + '$'" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></div>
 
         <!-- Solution text -->
         <div id = "solution-text">
@@ -121,7 +121,6 @@
   import axios from 'axios';
   import {VueMathjax} from 'vue-mathjax'
   import { mapGetters } from "vuex";
-  import Mathml2latex from 'mathml-to-latex';
   import ProgressBar from './ProgressBar';
   import ReportError from './ReportError';
 
@@ -143,7 +142,6 @@
     data() {
       return {
         ordinalNumbers: ["First", "Second", "Third", "Fourth", "Fifth"],
-        Mathml2latex: Mathml2latex,
         pastAnswersUnofficial: [],
         currAnswerUnofficial: "",
         resultUnofficial: "",
@@ -236,9 +234,8 @@
 
       // algebraicAnswer, returns boolean testing whether or not the problem's answer is algebraic or not
       algebraicAnswer: function() {
-        // Regular expression to test if string contains any letters (not within LaTeX commands) or greek symbols encoded in LaTeX
-        const regexp = new RegExp(/((?<!\\|[A-Za-z])[A-Za-z]+)|(\\alpha)|(\\beta)|(\\[Gg]amma)|(\\[Dd]elta)|(\\epsilon)|(\\varepsilon)|(\\zeta)|(\\eta)|(\\[Tt]heta)|(\\vartheta)|(\\iota)|(\\kappa)|(\\[Ll]ambda)|(\\mu)|(\\nu)|(\\[Xx]i)|(\\[Pp]i)|(\\rho)|(\\varrho)|(\\[Ss]igma)|(\\tau)|(\\[Uu]psilon)|(\\[Pp]hi)|(\\varphi)|(\\chi)|(\\[Pp]si)|(\\[Oo]mega)/);
-        return regexp.test(this.problem.answer);
+        // Call testAlgebraic from store function to determine if answer is algebraic
+        return this.$store.functions.testAlgebraic(this.problem.answer);
       },
 
       // focusStats, returns user's current stats for problem's focus
@@ -518,7 +515,7 @@
     }
 
     #progress-bars > div {
-      width: 100%;
+      width: calc(100% - 2px);
     }
   }
 

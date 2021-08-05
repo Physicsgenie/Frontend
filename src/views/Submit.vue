@@ -3,7 +3,7 @@
   <div class = "container">
     <Menu />
     <User />
-    <div v-if = "problemPreview !== null" class = "preview" v-bind:style = "{height: windowHeight + 'px'}">
+    <div v-if = "problemPreview !== null" class = "preview" v-bind:style = "{height: $store.getters.WindowHeight + 'px'}">
       <div class = "preview-container">
         <div class = "view-box">
           <Problem v-bind:problem = "problemPreview" class = "problem" />
@@ -55,8 +55,7 @@
       return {
         problems: this.$store.getters.SubmittedProblems,
         problemPreview: null,
-        submitData: this.$store.getters.ProblemMetaData,
-        windowHeight: window.innerHeight
+        submitData: this.$store.getters.ProblemMetaData
       }
     },
     methods: {
@@ -89,6 +88,7 @@
     justify-content: center;
     align-items: center;
     flex-direction: column;
+    background: rgba(0, 0, 0, 0.3);
   }
 
   .preview .preview-container {
@@ -109,14 +109,10 @@
 
   .preview .view-box {
     width: 100%;
-    height: 100%;
+    height: auto;
     padding: 0 80px;
     margin: 0;
     overflow-y: auto;
-  }
-
-  .preview .problem {
-
   }
 
   .preview .exit {
@@ -157,6 +153,26 @@
     transform: rotate(90deg);
   }
 
+  .preview .problem {
+    height: inherit;
+  }
+
+  @media only screen and (max-width: 700px) {
+    .preview {
+      left: 0;
+    }
+
+    .preview .preview-container {
+      width: 90%;
+      padding: 80px 50px;
+      margin-top: 75px;
+    }
+
+    .preview .view-box {
+      padding: 0 50px;
+    }
+  }
+
   .content {
     width: calc(90% - 100px);
     border-top-left-radius: 50px;
@@ -169,6 +185,13 @@
     background: white;
   }
 
+  @media only screen and (max-width: 700px) {
+    .content {
+      width: 90%;
+      margin: 100px 0 -50px 5%;
+    }
+  }
+
   h1 {
     font-family: "Nanum Gothic", sans-serif;
     font-size: 40px;
@@ -177,6 +200,7 @@
     margin-top: 100px;
     position: relative;
     background: white;
+    text-align: center;
   }
 
   .divider {

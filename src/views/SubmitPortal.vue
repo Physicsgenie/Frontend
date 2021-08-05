@@ -7,7 +7,7 @@
       <div class = "line two"></div>
       <p>Exit {{ currSubmission.problemID === null ? "Submit" : "Edit" }} Portal</p>
     </div>
-    <div v-if = "problemPreview !== null" class = "preview" v-bind:style = "{height: windowHeight + 'px'}">
+    <div v-if = "problemPreview !== null" class = "preview" v-bind:style = "{height: $store.getters.WindowHeight + 'px'}">
       <div class = "preview-container">
         <div class = "view-box">
           <Problem v-bind:problem = "problemPreview" v-bind:official = "false" class = "problem" />
@@ -230,7 +230,6 @@
   import User from "../components/User";
   import Problem from "../components/Problem";
   import FullEdit from "../components/FullEdit";
-  import Mathml2latex from 'mathml-to-latex';
 
 
   export default {
@@ -252,8 +251,7 @@
         errors: [],
         difficultyHover: null,
         submitData: this.$store.getters.ProblemMetaData,
-        problemPreview: null,
-        windowHeight: window.innerHeight
+        problemPreview: null
       }
     },
     computed: {
@@ -274,8 +272,7 @@
         }
       },
       algebraicAnswer: function() {
-        const regexp = new RegExp(/((?<!\\|[A-Za-z])[A-Za-z]+)|(\\alpha)|(\\beta)|(\\[Gg]amma)|(\\[Dd]elta)|(\\epsilon)|(\\varepsilon)|(\\zeta)|(\\eta)|(\\[Tt]heta)|(\\vartheta)|(\\iota)|(\\kappa)|(\\[Ll]ambda)|(\\mu)|(\\nu)|(\\[Xx]i)|(\\[Pp]i)|(\\rho)|(\\varrho)|(\\[Ss]igma)|(\\tau)|(\\[Uu]psilon)|(\\[Pp]hi)|(\\varphi)|(\\chi)|(\\[Pp]si)|(\\[Oo]mega)/);
-        return regexp.test(this.currSubmission.answer);
+        return this.$store.functions.testAlgebraic(this.currSubmission.answer);
       }
     },
     methods: {
@@ -302,7 +299,7 @@
           this.errors.push("Please enter the second hint or set it to \"none\"");
         }
 
-        if (this.currSubmission.answer === "" || this.currSubmission.answer === "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"/>") {
+        if (this.currSubmission.answer === "") {
           this.errors.push("Please enter the answer");
         }
 
@@ -565,7 +562,7 @@
           hintOne: problem.hintOne,
           hintTwo: problem.hintTwo === null ? "": problem.hintTwo,
           hintTwoInclude: problem.hintTwo !== null,
-          answer: (problem.answer.substring(0, 5) === "<math" ? Mathml2latex.convert(problem.answer) : problem.answer),
+          answer: problem.answer,
           mustMatch: problem.mustMatch,
           error: problem.error,
           solution: problem.solution,
@@ -608,14 +605,20 @@
     background: white;
     position: relative;
     box-sizing: border-box;
-    padding: 100px 100px 100px 200px;
+    padding: 100px 5% 100px calc(5% + 100px);
+  }
+
+  @media only screen and (max-width: 700px) {
+    .container {
+      padding: 100px 5%;
+    }
   }
 
   #exit {
     cursor: pointer;
     position: absolute;
     top: 55px;
-    left: 200px;
+    left: calc(5% + 100px);
     height: 20px;
   }
 
@@ -660,6 +663,7 @@
     justify-content: center;
     align-items: center;
     flex-direction: column;
+    background: rgba(0, 0, 0, 0.3);
   }
 
   .preview .preview-container {
@@ -680,14 +684,10 @@
 
   .preview .view-box {
     width: 100%;
-    height: 100%;
+    height: auto;
     padding: 0 80px;
     margin: 0;
     overflow-y: auto;
-  }
-
-  .preview .problem {
-
   }
 
   .preview .exit {
@@ -726,6 +726,26 @@
 
   .preview .exit:hover .fa {
     transform: rotate(90deg);
+  }
+
+  .preview .problem {
+    height: inherit;
+  }
+
+  @media only screen and (max-width: 700px) {
+    .preview {
+      left: 0;
+    }
+
+    .preview .preview-container {
+      width: 90%;
+      padding: 80px 50px;
+      margin-top: 75px;
+    }
+
+    .preview .view-box {
+      padding: 0 50px;
+    }
   }
 
   #errors {
@@ -1121,7 +1141,7 @@
     padding: 10px 15px;
     border-radius: 15px;
     margin: 2px 0 5px 0;
-    width: 400px;
+    width: 90%;
     transition: box-shadow .3s ease;
   }
 
@@ -1263,7 +1283,8 @@
     background: rgba(40, 83, 128, 0.3);
     position: relative;
     border-radius: 15px;
-    width: 120px;
+    width: 150px;
+    max-width: 90%;
     height: 25px;
   }
 

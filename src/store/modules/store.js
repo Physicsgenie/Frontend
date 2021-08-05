@@ -322,15 +322,13 @@ const actions = {
       });
     }
 
-    const regexp = new RegExp(/((?<!\\|[A-Za-z])[A-Za-z]+)|(\\alpha)|(\\beta)|(\\[Gg]amma)|(\\[Dd]elta)|(\\epsilon)|(\\varepsilon)|(\\zeta)|(\\eta)|(\\[Tt]heta)|(\\vartheta)|(\\iota)|(\\kappa)|(\\[Ll]ambda)|(\\mu)|(\\nu)|(\\[Xx]i)|(\\[Pp]i)|(\\rho)|(\\varrho)|(\\[Ss]igma)|(\\tau)|(\\[Uu]psilon)|(\\[Pp]hi)|(\\varphi)|(\\chi)|(\\[Pp]si)|(\\[Oo]mega)/);
-
 
     await axios.post("wp-json/physics_genie/submit-problem", {
       problem_text: getters.CurrSubmission.problemText,
       diagram: (getters.CurrSubmission.diagramType === "file" ? getters.CurrSubmission.diagramFile.text : (getters.CurrSubmission.diagramType === "code" ? getters.CurrSubmission.diagram : "")),
       answer: getters.CurrSubmission.answer,
       must_match: getters.CurrSubmission.mustMatch ? "true" : "false",
-      error: regexp.test(getters.CurrSubmission.answer) ? 0 : getters.CurrSubmission.error,
+      error: this.functions.testAlgebraic(getters.CurrSubmission.answer) ? 0 : getters.CurrSubmission.error,
       solution: getters.CurrSubmission.solution,
       solution_diagram: (getters.CurrSubmission.solutionDiagramType === "file" ? getters.CurrSubmission.solutionDiagramFile.text : (getters.CurrSubmission.solutionDiagramType === "code" ? getters.CurrSubmission.solutionDiagram : "")),
       hint_one: getters.CurrSubmission.hintOne,
@@ -374,15 +372,13 @@ const actions = {
   },
   async EditProblem({commit, getters}) {
 
-    const regexp = new RegExp(/((?<!\\|[A-Za-z])[A-Za-z]+)|(\\alpha)|(\\beta)|(\\[Gg]amma)|(\\[Dd]elta)|(\\epsilon)|(\\varepsilon)|(\\zeta)|(\\eta)|(\\[Tt]heta)|(\\vartheta)|(\\iota)|(\\kappa)|(\\[Ll]ambda)|(\\mu)|(\\nu)|(\\[Xx]i)|(\\[Pp]i)|(\\rho)|(\\varrho)|(\\[Ss]igma)|(\\tau)|(\\[Uu]psilon)|(\\[Pp]hi)|(\\varphi)|(\\chi)|(\\[Pp]si)|(\\[Oo]mega)/);
-
     await axios.put("wp-json/physics_genie/edit-problem", {
       problem_id: getters.CurrSubmissionEdit.problemID,
       problem_text: getters.CurrSubmissionEdit.problemText,
       diagram: (getters.CurrSubmissionEdit.diagramType === "file" ? getters.CurrSubmissionEdit.diagramFile.text : (getters.CurrSubmissionEdit.diagramType === "code" ? getters.CurrSubmissionEdit.diagram : "")),
       answer: getters.CurrSubmissionEdit.answer,
       must_match: getters.CurrSubmissionEdit.mustMatch ? "true" : "false",
-      error: regexp.test(getters.CurrSubmissionEdit.answer) ? 0 : getters.CurrSubmissionEdit.error,
+      error: this.functions.testAlgebraic(getters.CurrSubmissionEdit.answer) ? 0 : getters.CurrSubmissionEdit.error,
       solution: getters.CurrSubmissionEdit.solution,
       solution_diagram: (getters.CurrSubmissionEdit.solutionDiagramType === "file" ? getters.CurrSubmissionEdit.solutionDiagramFile.text : (getters.CurrSubmissionEdit.solutionDiagramType === "code" ? getters.CurrSubmissionEdit.solutionDiagram : "")),
       hint_one: getters.CurrSubmissionEdit.hintOne,
