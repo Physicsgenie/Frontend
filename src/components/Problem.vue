@@ -1,83 +1,126 @@
-/* eslint-disable *
 <template>
   <div id = "problem">
+    <!-- Report error -->
     <ReportError v-if = "reportError" v-bind:problemID = "problem.problemID" v-on:close = "reportErrorClose" style = "z-index: 500;" />
+
+    <!-- Progress bars -->
     <div id = "progress-bars">
-      <div class = "topic">
+      <!-- Topic progress bar (only shows if window width is greater than 850px -->
+      <div class = "topic" v-if = "$store.getters.WindowWidth > 850">
         <h4>{{ problem.topicName }}</h4>
         <ProgressBar class = "progress-bar" v-bind:xp = "topicStatsXP" v-bind:add = "add" />
       </div>
+
+      <!-- Focus progress bar -->
       <div class = "focus">
         <h4>{{ problem.mainFocusName }}</h4>
         <ProgressBar class = "progress-bar" v-bind:xp = "focusStatsXP" v-bind:add = "add" />
       </div>
     </div>
+
+    <!-- Main content -->
     <div class = "content" v-bind:style = "(result === 'correct') ? 'border: 1px solid rgb(5, 178, 0)' : ((result === 'incorrect' || (result === '' && pastAnswers.length > 0)) ? 'border: 1px solid #ff6469' : 'border: 1px solid rgba(17, 21, 33, 0.4)')">
-      <div id = "already-entered" class = "error">You have already tried this response</div>
-      <div id = "blank" class = "error">Please enter a response</div>
-      <div id = "add-saved" class = "error">Problem added to saved</div>
-      <div id = "remove-saved" class = "error">Problem remove from saved</div>
+      <!-- Result -->
       <div id = "result" v-if = "result !== '' || pastAnswers.length > 0">
         <div id = "correct" v-if = "result === 'correct'"><i class = "fa fa-check"></i>Correct</div>
         <div id = "incorrect" v-if = "result === 'incorrect' || (result === '' && pastAnswers.length > 0)"><i class = "fa fa-times"></i>Incorrect</div>
         <div id = "gave-up" v-if = "result === 'gave up'"><i class = "fa fa-minus-circle"></i>You Gave Up</div>
       </div>
+
+      <!-- Problem summary -->
       <div id = "summary">
+        <!-- Difficulty -->
         <div class = "difficulty">
           <span>Difficulty:</span>
           <i v-for = "i in 5" v-bind:key = "i" v-bind:class = "(i <= problem.difficulty) ? 'fa-star' : 'fa-star-o'" v-bind:style = "(i === 1) ? 'margin-left: 5px' : ''" class = "fa"></i>
         </div>
+
+        <!-- Main focus -->
         <div class = "main-focus"><span class = "topic">{{ problem.topicName }}</span>><span class = "focus">{{ problem.mainFocusName }}</span></div>
+
+        <!-- Other foci -->
         <div class = "secondary-focus" v-if = "problem.otherFoci.length > 0" v-bind:title = "otherFociList">{{ otherFociList.length > 40 ? otherFociList.substring(0, 40) + "..." : otherFociList }}</div>
       </div>
+
+      <!-- Problem text -->
       <p id = "problem-text"><vue-mathjax :formula = "problem.problemText" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></p>
+
+      <!-- Diagram (only shows if diagram is non-null) -->
       <div id = "diagram" v-if = "problem.diagram !== null" v-html = "problem.diagram"></div>
+
+      <!-- Hints (only shows if no result) -->
       <div id = "hints" v-if = "result === ''">
+        <!-- Hint one (only shows if at least one answer already submitted) -->
         <p class = "hint one" v-if = "pastAnswers.length >= 1">Hint: <vue-mathjax v-bind:formula = "problem.hintOne" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></p>
+
+        <!-- Hint two (only shows if hint two exists and if at least two answers already submitted) -->
         <p class = "hint one" v-if = "pastAnswers.length >= 2 && problem.hintTwo !== null">Hint: <vue-mathjax v-bind:formula = "problem.hintTwo" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></p>
       </div>
+
+      <!-- Previous answers (only shows if at least one answer already submitted) -->
       <div id = "previous-answers" v-if = "pastAnswers.length >= 1 && result === ''">Past Answers:
         <span class = "previous-answer" v-bind:key = "answer" v-for = "(answer, index) in pastAnswers"><vue-mathjax v-bind:formula = "'$' + answer + '$'" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax>{{ (index === pastAnswers.length - 1 ? '' : ', ') }}</span>
       </div>
+
+      <!-- Problem answer (only shows if no result) -->
       <div class = "flex row problem" v-if = "result === ''">
-        <div style = "width: 500px" id = "answer-container">
-          <mathlive-mathfield class = "math-input" v-on:focus = "mathInputFocusStyle = [{boxShadow: '0 0 10px 0 rgba(40, 46, 91, 0.4)'}]" v-on:blur = "mathInputFocusStyle = null" v-bind:style = "mathInputFocusStyle" v-model = "currAnswer"></mathlive-mathfield>
+        <div id = "answer-container">
+          <!-- Answer field -->
+          <mathlive-mathfield class = "math-input" virtual-keyboard-mode = "auto" v-on:focus = "mathInputFocusStyle = [{boxShadow: '0 0 10px 0 rgba(40, 46, 91, 0.4)'}]" v-on:blur = "mathInputFocusStyle = null" v-bind:style = "mathInputFocusStyle" v-model = "currAnswer"></mathlive-mathfield>
+
+          <!-- Expecting (details what form the answer should be in) -->
           <span class = "expecting">Expecting: {{ algebraicAnswer ? (problem.mustMatch ? "Exact algebraic expression (must match form exactly)" : "Algebraic expression (as simplified as possible)") : (problem.mustMatch ? "Exact numerical expression (must match both form and value exactly)" : (problem.error === "0" ? "Exact numerical answer" : "Numerical answer (must match value within a " + problem.error + "% error)")) }}</span>
         </div>
+
+        <!-- Buttons -->
         <div class = "buttons">
           <button id = "submit-pr" class = "button blue top" v-on:click = "onSubmit">Submit</button>
           <button id = "give-up" class = "button bottom red" v-on:click = "gaveUp">Give Up</button>
+          <!-- Skip is disabled if at least one attempt has already been submitted -->
           <button id = "skip" class = "button bottom" v-on:click = "skip" v-bind:class = "pastAnswers.length > 0 ? 'disabled' : ''">Skip</button>
         </div>
       </div>
 
+      <!-- Solution (only shows if result is showing) -->
       <div id = "solution" v-if = "result !== ''">
+        <!-- Student previous answers -->
         <div id = "student-answers">
+          <!-- If result was "correct" then most recent answer is colored green (since it was the correct one) -->
           <div v-for = "(answer, index) in pastAnswers" v-bind:key = "answer" v-bind:class = "(result === 'correct' && index === pastAnswers.length - 1) ? 'correct' : 'incorrect'">{{ ordinalNumbers[index] }} Response: <vue-mathjax v-bind:formula = "'$' + answer + '$'" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></div>
         </div>
-        <div id = "answer" v-if = "result !== 'correct'">Answer: <vue-mathjax class = "correct"  v-bind:formula = "'$' + (problem.answer.substring(0, 5) === '<math' ? Mathml2latex.convert(problem.answer) : problem.answer) + '$'" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></div>
+
+        <!-- Answer (does not show if result is correct since then it is already shown in student previous answers) -->
+        <div id = "answer" v-if = "result !== 'correct'">Answer: <vue-mathjax class = "correct"  v-bind:formula = "'$' + problem.answer + '$'" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></div>
+
+        <!-- Solution text -->
         <div id = "solution-text">
           <vue-mathjax v-bind:formula = "problem.solution" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax>
+
+          <!-- Solution diagram -->
           <div id = "solution-diagram" v-if = "problem.solutionDiagram !== null" v-html = "problem.solutionDiagram"></div>
         </div>
       </div>
+
+      <!-- Solution buttons -->
       <div class = "solution buttons" v-if = "result !== ''">
-        <!--<button id = "save" class = "button blue"><i class = "fa fa-plus"></i>Save</button>-->
         <button id = "report" v-on:click = "reportErrorPressed" class = "button" v-if = "problem.problemID !== null"><i class = "fa fa-flag"></i>Report an Error</button>
       </div>
+
+      <!-- Next button -->
       <button id = "next" v-on:click = "next" v-if = "result !== ''">Next<div class = "arrow"><div></div><div></div><div></div></div></button>
     </div>
+
+    <!-- Source -->
     <div class = "source">Source: {{ problem.source === null ? "[[COULD NOT BE FOUND]]" : (problem.source.source + " (" + problem.source.author + ") " + (problem.problemNumber !== "" ? "#" : "") + problem.problemNumber) }}</div>
   </div>
 </template>
 
 <script>
 
+  // Imports
   import axios from 'axios';
   import {VueMathjax} from 'vue-mathjax'
   import { mapGetters } from "vuex";
-  import Mathml2latex from 'mathml-to-latex';
-  import * as MathLive from 'mathlive/dist/mathlive.min.mjs';
   import ProgressBar from './ProgressBar';
   import ReportError from './ReportError';
 
@@ -96,11 +139,24 @@
         type: Boolean
       }
     },
+    data() {
+      return {
+        ordinalNumbers: ["First", "Second", "Third", "Fourth", "Fifth"],
+        pastAnswersUnofficial: [],
+        currAnswerUnofficial: "",
+        resultUnofficial: "",
+        wrong: false,
+        mathInputFocusStyle: null,
+        reportError: false,
+        processingResult: ""
+      }
+    },
     computed: {
       ...mapGetters({
         userStats: 'UserStats',
         submitData: 'ProblemMetaData'
       }),
+      // pastAnswers, map to "PastAnswers" from store if official (get and set), otherwise return unofficial past answers from component data (get and set)
       pastAnswers: {
         get() {
           if (this.official) {
@@ -117,6 +173,8 @@
           }
         }
       },
+
+      // result, map to "result" from store if official (get and set), otherwise return unofficial result from component data (get and set)
       result: {
         get() {
           if (this.official) {
@@ -133,6 +191,8 @@
           }
         }
       },
+
+      // currAnswer, map to "CurrAnswer" from store if official (get and set), otherwise return unofficial curr answer from component data (get and set)
       currAnswer: {
         get() {
           if (this.official) {
@@ -149,11 +209,16 @@
           }
         }
       },
+
+      // otherFociList, creates "Also Includes: ..." string from otherFoci list
       otherFociList: function() {
+        // Returns null if no other foci
         if (this.problem.otherFoci.length === 0) {
           return null;
         }
+
         let string = "Also Includes: ";
+        // Iterates through each focus and concatenates to return string, with filler words depending on where it is in the array
         for (let i = 0; i < this.problem.otherFoci.length; i++) {
           string += this.problem.otherFoci[i];
           if (i === 0 && this.problem.otherFoci.length === 2) {
@@ -166,17 +231,27 @@
         }
         return string;
       },
+
+      // algebraicAnswer, returns boolean testing whether or not the problem's answer is algebraic or not
       algebraicAnswer: function() {
-        const regexp = new RegExp(/((?<!\\|[A-Za-z])[A-Za-z]+)|(\\alpha)|(\\beta)|(\\[Gg]amma)|(\\[Dd]elta)|(\\epsilon)|(\\varepsilon)|(\\zeta)|(\\eta)|(\\[Tt]heta)|(\\vartheta)|(\\iota)|(\\kappa)|(\\[Ll]ambda)|(\\mu)|(\\nu)|(\\[Xx]i)|(\\[Pp]i)|(\\rho)|(\\varrho)|(\\[Ss]igma)|(\\tau)|(\\[Uu]psilon)|(\\[Pp]hi)|(\\varphi)|(\\chi)|(\\[Pp]si)|(\\[Oo]mega)/);
-        return regexp.test(this.problem.answer);
+        // Call testAlgebraic from store function to determine if answer is algebraic
+        return this.$store.functions.testAlgebraic(this.problem.answer);
       },
+
+      // focusStats, returns user's current stats for problem's focus
       focusStats: function() {
         let self = this;
         return this.userStats.topics.filter(function(topic) {return topic.topicId === self.problem.topic})[0].foci.filter(function(focus) {return focus.focusId === self.problem.mainFocus})[0];
       },
+
+      // topicStatsXP, calculates xp that should be shown on topic progress bar
       topicStatsXP: function() {
         let self = this;
+
+        // Gets user's current stats for problem's topic
         let xp = this.userStats.topics.filter(function(topic) {return topic.topicId === self.problem.topic})[0].xp;
+
+        // Logic to calculate what new xp will be when processing result to ensure progress bar updates right when result is shown (rather than being delayed to when user stats are updated)
         if (this.processingResult === "correct" && this.focusStats.streak > 0 && (this.focusStats.streak + 1) % 5 === 0) {
           return xp + Math.floor(1.2*(this.focusStats.xp+this.problem.difficulty*(4-this.pastAnswers.length))) - this.focusStats.xp;
         } else if (this.processingResult === "correct") {
@@ -187,7 +262,10 @@
           return xp;
         }
       },
+
+      // focusStatsXP, calculates xp that should be shown on focus progress bar
       focusStatsXP: function() {
+        // Logic to calculate what new xp will be when processing result to ensure progress bar updates right when result is shown (rather than being delayed to when user stats are updated)
         if (this.processingResult === "correct" && this.focusStats.streak > 0 && (this.focusStats.streak + 1) % 5 === 0) {
           return this.focusStats.xp + Math.floor(1.2*(this.focusStats.xp+this.problem.difficulty*(4-this.pastAnswers.length)));
         } else if (this.processingResult === "correct") {
@@ -198,8 +276,11 @@
           return this.focusStats.xp;
         }
       },
+
+      // add, calculates the xp that will be added to both progress bars if correct
       add: function() {
         if (this.result !== "") {
+          // Add should be zero if result is showing
           return 0;
         } else if (this.focusStats.streak > 0 && (this.focusStats.streak + 1) % 5 === 0) {
           return Math.floor(1.2*(this.focusStats.xp+this.problem.difficulty*(3-this.pastAnswers.length))) - this.focusStats.xp;
@@ -208,28 +289,22 @@
         }
       }
     },
-    data() {
-      return {
-        ordinalNumbers: ["First", "Second", "Third", "Fourth", "Fifth"],
-        Mathml2latex: Mathml2latex,
-        pastAnswersUnofficial: [],
-        currAnswerUnofficial: "",
-        resultUnofficial: "",
-        wrong: false,
-        mathInputFocusStyle: null,
-        reportError: false,
-        processingResult: ""
-      }
-    },
     methods: {
+      // reportErrorPressed, shows ReportError popup
       reportErrorPressed: function() {
         this.reportError = true;
       },
+
+      // reportErrorClose, closes ReportError popup
       reportErrorClose: function() {
         this.reportError = false;
       },
+
+      // onSubmit, submits student answer
       onSubmit: function() {
         let self = this;
+
+        // Ensures student answer is not blank and has not already been tried
         if (this.currAnswer === "") {
           this.$store.dispatch('Confirmation', "Please enter an answer before submitting");
         } else if (this.pastAnswers.includes(this.currAnswer)) {
@@ -237,119 +312,147 @@
         } else {
           this.$store.commit('setProcessing', true);
 
-          if (self.problem.answer.substring(0, 5) === "<math") {
-            axios.post("wp-json/physics_genie/external-request", {
-              method: "POST",
-              url: "www.wiris.net/demo/editor/evaluate?mml=" + ("<math>" + MathLive.convertLatexToMathMl(self.currAnswer) + "</math>")
-            }).then((response) => {
-              let studentAnswer = parseFloat(response.data);
-              axios.post("wp-json/physics_genie/external-request", {
-                method: "POST",
-                url: "www.wiris.net/demo/editor/evaluate?mml=" + self.problem.answer.replace(" xmlns='http://www.w3.org/1998/Math/MathML'", "").replace(" xmlns=\"http://www.w3.org/1998/Math/MathML\"", "")
-              }).then((res) => {
-                let actualAnswer = parseFloat(res.data);
+          // Wolfram URL
+          const wolframURL = "https://www.wolframcloud.com/obj/5920341f-cfee-4a37-a824-01aa6d105b30";
 
-                if (("<math>" + MathLive.convertLatexToMathMl(self.currAnswer) + "</math>") === self.problem.answer.replace(" xmlns='http://www.w3.org/1998/Math/MathML'", "").replace(" xmlns=\"http://www.w3.org/1998/Math/MathML\"", "") || (!self.problem.mustMatch && studentAnswer <= actualAnswer * 1.05 && studentAnswer >= actualAnswer * 0.95) || (studentAnswer === actualAnswer)) {
-                  self.correct();
-                } else {
-                  self.incorrect();
-                }
+          // Encoded Mathematica request
+          const request = encodeURI(wolframURL + "?studentAnswer=" + self.currAnswer + "&correctAnswer=" + self.problem.answer + "&error=" + self.problem.error + "&mustMatch=" + (self.problem.mustMatch ? "true" : "false"));
 
-              });
-            });
-          } else {
-
-            const wolframURL = "https://www.wolframcloud.com/obj/0e9e2a5d-47b4-4d72-8a0e-56d16f5385b2";
-
-            const request = encodeURI(wolframURL + "?studentAnswer=" + self.currAnswer + "&correctAnswer=" + self.problem.answer + "&error=" + self.problem.error + "&mustMatch=" + (self.problem.mustMatch ? "true" : "false"));
-
-            axios.post("wp-json/physics_genie/external-request", {
-              method: "GET",
-              url: request
-            }).then((response) => {
-              if (response.data === "True") {
-                self.correct();
-              } else {
-                self.incorrect();
-              }
-            });
-          }
-
-
+          // API POST request to /external-request with Mathematica reuquest string as URL
+          axios.post("wp-json/physics_genie/external-request", {
+            method: "GET",
+            url: request
+          }).then((response) => {
+            // If response is "True" run correct function, otherwise run incorrect function
+            if (response.data === "True") {
+              self.correct();
+            } else {
+              self.incorrect();
+            }
+          });
         }
       },
+
+      // async correct, runs when student's answer is correct
       correct: async function() {
+        // Add correct answer to previous answers list
         this.pastAnswers.push(this.currAnswer);
+
+        // Set processingResult for xp delay fix
         this.processingResult = "correct";
+
+        // Set result
         this.result = "correct";
+
+        // Reset currAnswer to blank string
         this.currAnswer = "";
+
         this.$store.commit('setProcessing', false);
+        // If problem is an official attempt then submit the attempt and update user stats
         if (this.official) {
           await this.$store.dispatch('SubmitAttempt', "correct");
           await this.$store.dispatch('GetUserStats');
         }
+
+        // Reset processingResult to blank string
         this.processingResult = "";
       },
+
+      // async incorrect, runs when student's answer is incorrect
       incorrect: async function() {
+        // Add incorrect answer to previous answers list
         this.pastAnswers.push(this.currAnswer);
+
+        // Set currAnswer to blank string
         this.currAnswer = "";
+
         this.$store.commit('setProcessing', false);
+        // If third incorrect answer, then run incorrect result logic
         if (this.pastAnswers.length === 3) {
-          this.result = "incorrect";
+          // Set processingResult for xp delay fix
           this.processingResult = "incorrect";
+
+          // Set result
+          this.result = "incorrect";
+
+          // If problem is an official attempt then submit the attempt and update user stats
           if (this.official) {
             await this.$store.dispatch('SubmitAttempt', "incorrect");
             await this.$store.dispatch('GetUserStats');
           }
         }
+
+        // Reset processingResult to blank string
         this.processingResult = "";
       },
+
+      // async gaveUp, give up on current problem
       gaveUp: async function() {
-        this.currAnswer = "";
-        this.result = "gave up";
+        // Set processingResult for xp delay fix
         this.processingResult = "incorrect";
+
+        // Set result
+        this.result = "gave up";
+
+        // Set currAnswer to blank string
+        this.currAnswer = "";
+
+        // If problem is an official attempt then submit the attempt and update user stats
         if (this.official) {
           await this.$store.dispatch('SubmitAttempt', "gave up");
           await this.$store.dispatch('GetUserStats');
         }
+
+        // Reset processingResult to blank string
         this.processingResult = "";
       },
+
+      // async skip, skip current problem and get next one
       skip: async function() {
+        // If problem is an official attempt then get next problem
         if (this.official) {
           this.$store.commit('setProcessing', true);
+          // API PUT request /reset-curr-problem to ensure database deletes record of current problem
           await axios.put("wp-json/physics_genie/reset-curr-problem", null, {headers: {'Authorization': 'Bearer ' + this.$store.getters.Token}});
           await this.$store.dispatch('GetCurrProblem');
           this.$store.commit('setProcessing', false);
         }
+
+        // Reset previous answers
         this.pastAnswers = [];
+
+        // Reset result
         this.result = "";
       },
+
+      // async next, get next problem
       next: async function() {
+        // If problem is an official attempt then get next problem
         if (this.official) {
           this.$store.commit('setProcessing', true);
           await this.$store.dispatch('GetCurrProblem');
           this.$store.commit('setProcessing', false);
         }
-        this.pastAnswers = [];
-        this.result = "";
-      },
-      updateAnswer: function(answer) {
-        this.currAnswer = answer;
-      }
-    },
-    mounted() {
 
+        // Reset previous answers
+        this.pastAnswers = [];
+
+        // Reset result
+        this.result = "";
+      }
     }
   }
 </script>
 
 <style scoped>
 
+  /* General styling */
   #problem {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
   }
 
   .content {
@@ -365,6 +468,7 @@
     font-family: 'Nunito', sans-serif;
   }
 
+  /* Progress bars styling */
   #progress-bars {
     height: 120px;
     width: 100%;
@@ -404,17 +508,35 @@
     width: 100%;
   }
 
+  @media only screen and (max-width: 850px) {
+    #progress-bars {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #progress-bars > div {
+      width: calc(100% - 2px);
+    }
+  }
+
+  /* Summary styling */
   #summary {
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
+    padding: 7.5px 15px;
     justify-content: space-around;
     font-style: italic;
     margin-bottom: 17px;
     margin-top: -5px;
-    height: 50px;
     background: rgba(56, 100, 155, 0.1);
     box-shadow: 0 0 8px 1px rgba(56, 100, 155, 0.3);
+  }
+
+  #summary > div {
+    margin: 7.5px 0;
+    text-align: center;
   }
 
   #summary .topic {
@@ -427,9 +549,10 @@
 
   #summary .secondary-focus {
     font-size: 13px;
-    margin-top: 3px;
   }
 
+
+  /* Hints, student previous answes, problem text and button styling */
   #hints {
     margin-top: 10px;
     margin-bottom: 50px;
@@ -447,24 +570,10 @@
     font-family: "Montserrat", sans-serif;
   }
 
-  .error {
-    position: absolute;
-    background: rgb(29,34,41);
-    padding: 15px 30px;
-    color: white;
-    top: 0;
-    left: -2px;
-    opacity: 0;
-    font-size: 12px;
-    text-align: center;
-    transition: top .25s ease, opacity .25s ease;
-    z-index: -1;
-  }
-
-
   .flex.row {
     display: flex;
     flex-direction: row;
+    align-items: center;
   }
 
   #problem-text {
@@ -475,9 +584,15 @@
 
   .flex.problem .buttons {
     margin-left: 30px;
+    margin-top: -16px;
     width: 250px;
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-around;
+  }
+
+  .flex.problem .buttons .button {
+    margin-bottom: 10px;
   }
 
   .button.disabled {
@@ -505,6 +620,10 @@
     color: #ff6469;
   }
 
+  #answer-container {
+    width: 500px;
+  }
+
   .math-input {
     border: 1px solid rgba(40, 46, 91, 0.4);
     border-radius: 5px;
@@ -515,7 +634,21 @@
     cursor: text;
   }
 
+  @media only screen and (max-width: 850px) {
+    #answer-container {
+      width: 100%;
+    }
 
+    .flex.row {
+      flex-direction: column;
+    }
+
+    .flex.problem .buttons {
+      margin-top: 20px;
+    }
+  }
+
+  /* Result and solution styling */
   #result div {
     width: calc(100% + 70px);
     width: -moz-calc(100% + 70px);
@@ -569,7 +702,6 @@
     color: rgb(5, 178, 0);
   }
 
-
   #answer {
     font-style: italic;
     font-size: 16px;
@@ -592,11 +724,7 @@
     margin-bottom: 20px;
   }
 
-
-  #save {
-    margin-right: 10px;
-  }
-
+  /* Next button styling */
   #next {
     position: absolute;
     bottom: 0;
@@ -664,7 +792,7 @@
     background: rgba(56, 100, 155, 0.1);
   }
 
-
+  /* Source styling */
   .source {
     color: rgb(29,34,41);
     font-family: "Montserrat", sans-serif;

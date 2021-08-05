@@ -1,6 +1,10 @@
 <template>
   <div class = "container" v-bind:style = "{minHeight: $store.getters.WindowHeight + 'px'}">
     <div class = "content">
+      <a href = "https://physicsgenie.ga/" id = "back-home">
+        <i class = "fa fa-caret-left" aria-hidden = "true"></i>
+        <div class = "text">Back to Site</div>
+      </a>
       <h2>Register</h2>
       <div id = "errors" v-if = "errors.length > 0">
         <p>Please address the following errors:</p>
@@ -10,22 +14,22 @@
       </div>
       <form @submit.prevent="submit">
         <div>
-          <label for="email">Email:</label>
-          <input type="text" name="email" id = "email" v-model="form.email">
+          <label for = "email">Email:</label>
+          <input type = "text" name = "email" id = "email" v-model="form.email">
         </div>
         <div>
-          <label for="username">Username:</label>
-          <input type="text" name="username" id = "username" v-model="form.username">
+          <label for = "username">Username:</label>
+          <input type = "text" name = "username" id = "username" v-model="form.username">
         </div>
         <div>
-          <label for="password">Password:</label>
-          <input type="password" name="password" id = "password" v-model="form.password">
+          <label for = "password">Password:</label>
+          <input type = "password" name = "password" id = "password" v-model="form.password">
         </div>
         <div id = "pass-confirm-div">
-          <label for="pass-confirm">Confirm Password:</label>
-          <input type="password" name="pass-confirm" id = "pass-confirm" v-model="passConfirm">
+          <label for = "pass-confirm">Confirm Password:</label>
+          <input type = "password" name = "pass-confirm" id = "pass-confirm" v-model="passConfirm">
         </div>
-        <button type="submit"> Submit</button>
+        <button type = "submit"> Submit</button>
       </form>
     </div>
     <div class = "login">
@@ -67,8 +71,8 @@
           this.errors.push("Please enter a username");
         }
 
-        if (this.form.password.length < 5) {
-          this.errors.push("Please enter a password that is at least 5 characters long");
+        if (this.form.password.length < 8) {
+          this.errors.push("Please enter a password that is at least 8 characters long");
         }
 
         if (this.form.password !== this.passConfirm) {
@@ -108,15 +112,48 @@
   }
 
   .content {
-    width: 450px;
+    max-width: 450px;
+    width: 95%;
     box-sizing: border-box;
     border: 1px solid #cccccc;
     border-radius: 16px;
     padding: 50px;
+    margin-top: 20px;
     background: white;
     position: relative;
     top: 0;
     box-shadow: 0 0 10px 4px rgba(17, 21, 33, 0.3);
+  }
+
+  #back-home {
+    position: absolute;
+    top: -40px;
+    left: 25px;
+    display: flex;
+    height: 40px;
+    line-height: 35px;
+    padding: 5px 20px 0 20px;
+    box-sizing: border-box;
+    vertical-align: center;
+    flex-direction: row;
+    align-items: center;
+    text-decoration: none;
+    color: white;
+    background: rgba(0, 0, 0, 0.2);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    border-top-left-radius: 25px;
+    border-top-right-radius: 25px;
+    transition: background .3s ease;
+  }
+
+  #back-home .fa {
+    margin-right: 7px;
+    margin-top: 2px;
+  }
+
+  #back-home:hover {
+    background: rgba(0, 0, 0, 0.5);
   }
 
   #errors {
@@ -207,7 +244,8 @@
   }
 
   .login {
-    width: 450px;
+    max-width: 450px;
+    width: 95%;
     box-sizing: border-box;
     border: 1px solid #cccccc;
     border-radius: 13px;
