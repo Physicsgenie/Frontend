@@ -1,22 +1,26 @@
 <template>
-  <div class = "container" v-bind:style = "{height: $store.getters.WindowHeight + 'px'}">
+  <div class = "container" v-bind:style = "{minHeight: $store.getters.WindowHeight + 'px'}">
     <div class = "content">
+      <a href = "https://physicsgenie.ga/" id = "back-home">
+        <i class = "fa fa-caret-left" aria-hidden = "true"></i>
+        <div class = "text">Back to Site</div>
+      </a>
       <h2>Physics Genie</h2>
       <div id = "errors" v-if = "showError">
         <p v-if = "showError" class = "error">Email/Username or Password is incorrect</p>
       </div>
       <form @submit.prevent = "submit">
         <div>
-          <label>Email/Username</label><br>
-          <input type = "text" name = "username" v-model="form.username" />
+          <label for = "username">Email/Username</label><br>
+          <input id = "username" type = "text" name = "username" v-model="form.username" />
         </div>
         <div>
-          <label>Password</label><br>
-          <input type = "password" name = "password" v-model = "form.password" />
+          <label for = "password">Password</label><br>
+          <input id = "password" type = "password" name = "password" v-model = "form.password" />
         </div>
         <div>
-          <input type = "checkbox" name = "remember" v-model = "form.rememberMe" />
-          <label id = "remember">Remember Me</label>
+          <input id = "remember-input" type = "checkbox" name = "remember" v-model = "form.rememberMe" />
+          <label for = "remember-input" id = "remember">Remember Me</label>
         </div>
         <button type = "submit">LOG IN</button>
         <router-link id = "lost-password" to = "/password-reset" class = "link">Forgot your Password?</router-link>
@@ -74,18 +78,53 @@
     align-items: center;
     position: relative;
     flex-direction: column;
+    padding: 65px 0;
+    box-sizing: border-box;
   }
 
   .content {
-    width: 450px;
+    max-width: 450px;
+    width: 95%;
     box-sizing: border-box;
     border: 1px solid #cccccc;
     border-radius: 16px;
     padding: 50px;
+    margin-top: 20px;
     background: white;
     position: relative;
     top: 0;
     box-shadow: 0 0 10px 4px rgba(17, 21, 33, 0.3);
+  }
+
+  #back-home {
+    position: absolute;
+    top: -40px;
+    left: 25px;
+    display: flex;
+    height: 40px;
+    line-height: 35px;
+    padding: 5px 20px 0 20px;
+    box-sizing: border-box;
+    vertical-align: center;
+    flex-direction: row;
+    align-items: center;
+    text-decoration: none;
+    color: white;
+    background: rgba(0, 0, 0, 0.2);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    border-top-left-radius: 25px;
+    border-top-right-radius: 25px;
+    transition: background .3s ease;
+  }
+
+  #back-home .fa {
+    margin-right: 7px;
+    margin-top: 2px;
+  }
+
+  #back-home:hover {
+    background: rgba(0, 0, 0, 0.5);
   }
 
   #errors {
@@ -171,7 +210,8 @@
   }
 
   .register {
-    width: 450px;
+    max-width: 450px;
+    width: 95%;
     box-sizing: border-box;
     border: 1px solid #cccccc;
     border-radius: 13px;
@@ -186,11 +226,6 @@
     font-family: "Montserrat", sans-serif;
     font-size: 13px;
   }
-
-  .register .link {
-  }
-
-
 
 
 </style>

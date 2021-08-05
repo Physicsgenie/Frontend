@@ -1,14 +1,25 @@
 <template>
   <div class = "container">
+    <!-- Menus -->
     <Menu />
     <User />
-    <div class = "content" v-bind:style = "{minHeight: windowHeight + 'px'}">
+
+    <!-- Content -->
+    <div class = "content" v-bind:style = "{minHeight: $store.getters.WindowHeight + 'px'}">
       <div class = "problem-div" ref = "problemDiv">
+        <!-- Problem -->
         <Problem v-bind:problem = "problem" v-if = "problem !== null" v-bind:official = "$route.params.problem === undefined" class = "problem" />
+
+        <!-- Null problem popup -->
         <div v-else class = "null-problem">
           <div class = "title">
+            <!-- Title -->
             <h3>No Problem Available</h3>
+
+            <!-- No problem to show (only shows if no specific problem is being requested) -->
             <p v-if = "$route.params.problem === undefined">You have completed all the problems in your current setup. To continue solving problems go to <router-link to = "/setup" class = "link">Problem Setup</router-link> and change your problem criteria.</p>
+
+            <!-- Problem does not exist (shows if problem is being requested but could not be found) -->
             <p v-else>The problem you are trying to render could not be found. Try searching using a different problem id.</p>
           </div>
         </div>
@@ -19,6 +30,7 @@
 
 <script>
 
+  // Imports
   import Menu from "../components/Menu";
   import User from "../components/User";
   import Problem from "../components/Problem";
@@ -33,7 +45,7 @@
     },
     data() {
       return {
-        windowHeight: window.innerHeight,
+        // problemUnofficial, stores problem if specific one requested
         problemUnofficial: {
           problemID: null,
           problemText: "",
@@ -52,6 +64,7 @@
       }
     },
     computed: {
+      // problem, returns "CurrProblem" from store if no problem requested (get only), otherwise returns unoffiical problem from request (get and set)
       problem: {
         get() {
           if (this.$route.params.problem === undefined) {
@@ -71,15 +84,18 @@
 
     },
     mounted() {
-
       let self = this;
 
+      // If problem param provided, then use it to request specific problem (based on param)
       if (this.$route.params.problem !== undefined) {
 
+        // API GET request to /problem with problemID (from route param) as param (and then set current problem based on response data)
         axios.get('wp-json/physics_genie/problem/' + this.$route.params.problem, {headers: {'Authorization': 'Bearer ' + this.$store.getters.Token}}).then((response) => {
+          // If no response, set problem to null
           if (response.data === "") {
             self.problem = null;
           } else {
+            // Change other_foci character string into foci array of actual focus names (from ProblemMetaData)
             let foci = [];
             if (response.data.other_foci !== null) {
               response.data.other_foci.split("").forEach(function(otherFocus) {
@@ -87,12 +103,13 @@
               });
             }
 
+            // Change source from id to actual source name
             let source = null;
-
             if (self.$store.getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === response.data.source}).length > 0) {
               source = self.$store.getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === response.data.source})[0];
             }
 
+            // Set problem values from GET request response data
             self.problem = {
               problemID: response.data.problem_id,
               problemText: response.data.problem_text.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
@@ -116,22 +133,13 @@
           }
         });
       }
-
-
-    },
-    created() {
-
     }
   }
 </script>
 
 <style scoped>
 
-  .container {
-    /*padding: 50px 0;*/
-    /*box-sizing: border-box;*/
-  }
-
+  /* General sytling */
   .content {
     width: 100%;
     height: inherit;
@@ -142,19 +150,44 @@
     box-sizing: border-box;
   }
 
+  @media only screen and (max-width: 700px) {
+    .content {
+      padding: 115px 0 75px 0;
+    }
+  }
+
+  /* Problem styling */
   .problem-div {
-    width: 55%;
+    width: 60%;
     margin-left: 50px;
     background-color: white;
-    z-index: 1;
-    padding: 60px;
+    z-index: 0;
+    padding: 60px 50px;
     border-radius: 50px;
   }
 
-  .null-problem {
-
+  @media only screen and (max-width: 1050px) {
+    .problem-div {
+      width: 70%;
+      margin-left: 95px;
+      padding: 50px 40px;
+    }
   }
 
+  @media only screen and (max-width: 700px) {
+    .problem-div {
+      width: 80%;
+      margin-left: 0;
+    }
+  }
+
+  @media only screen and (max-width: 550px) {
+    .problem-div {
+      padding: 40px 35px;
+    }
+  }
+
+  /* Null problem styling */
   .null-problem .title {
     display: flex;
     flex-direction: column;

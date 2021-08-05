@@ -1,23 +1,35 @@
 <template>
   <div class = "container">
+    <!-- Menus -->
     <Menu />
     <User />
+
+    <!-- Content -->
     <div class = "content">
+      <!-- Beta version popup -->
       <div class = "box" id = "beta">
         <p>Welcome to the first version of Physics Genie! We have only recently released it so you are among one of the first to use our physics learning platform. We would love to hear your feedback or about any bugs/errors you may experience, which you can relay to us through <a class = "link" href = "https://docs.google.com/forms/d/e/1FAIpQLSf362PWDUIZvtOHSaWGpeSdHx2373O3upKgtgBiVWu5FzBfBQ/viewform?usp=sf_link" target = "_blank">this form</a>. Again, thanks so much and enjoy!</p>
       </div>
+
+      <!-- Profile -->
       <div id = "profile" class = "box">
+        <!-- Avatar -->
         <div class = "avatar">
           <i class = "fa fa-user-circle-o img"></i>
           <div class = "change">Change<br>Avatar</div>
         </div>
+
+        <!-- User info -->
         <div class = "profile-info">
-          <div class = "username" v-bind:style = "{'box-shadow': editingName ? '0 0 10px 1px rgba(17, 21, 33, 0.3)' : 'none'}"><input v-bind:readonly = "!editingName" v-model = "user" ref = "nameInput" v-bind:style = "{width: editingName ? '165px' : '180px'}"><i v-if = "editingName" class = "fa fa-times cancel" v-on:click = "cancelNameEdit"></i><i class = "fa" v-bind:class = "editingName ? 'fa-check' : 'fa-pencil'" v-on:click = "editName" v-bind:style = "{color: editingName ? 'rgb(5, 178, 0)' : 'black'}"></i></div>
+          <div class = "username" v-bind:style = "{'box-shadow': editingName ? '0 0 10px 1px rgba(17, 21, 33, 0.3)' : 'none'}"><input v-bind:readonly = "!editingName" v-model = "user" ref = "nameInput"><i v-if = "editingName" class = "fa fa-times cancel" v-on:click = "cancelNameEdit"></i><i class = "fa" v-bind:class = "editingName ? 'fa-check' : 'fa-pencil'" v-on:click = "editName" v-bind:style = "{color: editingName ? 'rgb(5, 178, 0)' : 'black'}"></i></div>
           <div class = "link" v-on:click = "changePassword">Change Password</div>
           <router-link to = "/setup" class = "link">Problem Setup</router-link>
         </div>
       </div>
+
+      <!-- Stats overview -->
       <div id = "overview" class = "box">
+        <!-- Level and total XP row -->
         <div class = "row">
           <div>
             <h3>Level</h3>
@@ -28,12 +40,19 @@
             <p>{{ userStats.xp }}</p>
           </div>
         </div>
-        <div>
-          <h3>Problems Attempted</h3>
-          <p>{{ userStats.presented }}</p>
+
+        <!-- Problems attempted row -->
+        <div class = "row attempted">
+          <div>
+            <h3>Problems Attempted</h3>
+            <p>{{ userStats.presented }}</p>
+          </div>
         </div>
       </div>
+
+      <!-- Stats summary -->
       <div id = "summary" class = "box">
+        <!-- Problems correct, problems incorrect, and average attempts list -->
         <div class = "summary-info left">
           <div class = "descriptors">
             <div>Problems Correct</div>
@@ -46,12 +65,16 @@
             <div>{{ userStats.avgAttempts.toFixed(2) }}</div>
           </div>
         </div>
-        <div>
+
+        <!-- Circular progress bar (level and XP) -->
+        <div class = "progress-bar-div">
           <radial-progress-bar class = "progress-bar" :diamater = "100" :completed-steps = "userStats.xp-Math.pow(Math.floor(Math.sqrt(userStats.xp+9)), 2)+9" :total-steps = "2*Math.floor(Math.sqrt(userStats.xp+9))+1" start-color = "#E8D2A9" stop-color = "#000A5D" inner-stroke-color = "#08232D" :stroke-width = "30" :inner-stroke-width = "35" stroke-linecap = "butt">
             <span class = "level">{{ Math.floor(Math.sqrt(userStats.xp+9))-2 }}</span>
             <span class = "xp">{{ userStats.xp-Math.pow(Math.floor(Math.sqrt(userStats.xp+9)), 2)+9 }} / {{ 2*Math.floor(Math.sqrt(userStats.xp+9))+1 }}</span>
           </radial-progress-bar>
         </div>
+
+        <!-- Streaks list  -->
         <div class = "summary-info right">
           <div class = "descriptors">
             <div>Longest Winstreak</div>
@@ -65,16 +88,26 @@
           </div>
         </div>
       </div>
+
+      <!-- Focus breakdown (only shows if at least one focus has at least one problem presented) -->
       <div id = "breakdown" class = "box" v-if = "userStats.topics[0].foci.filter(function(focusTemp) {return focusTemp.presented > 0}).length > 0">
-        <h1 v-on:click = "toggleBreakdown" ><i class = "fa fa-angle-right" v-bind:style = "[{transform: breakdown ? 'rotate(90deg)' : 'rotate(0deg)'}, {marginRight: breakdown ? '12px' : '8px'}]"></i>Focus Breakdown</h1>
+        <!-- Title and breakdown toggle button -->
+        <h1 v-on:click = "toggleBreakdown"><i class = "fa fa-angle-right" v-bind:style = "[{transform: breakdown ? 'rotate(90deg)' : 'rotate(0deg)'}, {marginRight: breakdown ? '12px' : '8px'}]"></i>Focus Breakdown</h1>
+
+        <!-- Breakdown (only shows if toggled on) -->
         <div v-if = "breakdown">
+          <!-- One entry for each focus with at least one problem presented (sorted by xp) -->
           <div v-for = "focus in userStats.topics[0].foci.filter(function(focusTemp) {return focusTemp.presented > 0}).sort((firstEl, secondEl) => {return (secondEl.xp > firstEl.xp ? 1 : -1)})" v-bind:key = "focus.focusId" class = "breakdown-focus">
+            <!-- Initial info (unexpanded) -->
             <div class = "initial">
               <h3>{{ focus.focus }} ({{ focus.xp }})</h3>
               <ProgressBar class = "progress-bar" v-bind:xp = "focus.xp" v-bind:add = "null" />
               <i class = "fa fa-angle-down" v-on:click = "toggleFocusExpand(focus.focusId)" v-bind:style = "{transform: fociExpanded.includes(focus.focusId) ? 'rotate(180deg)' : 'rotate(0deg)'}"></i>
             </div>
-            <div class = "expanded" v-bind:style = "{height: fociExpanded.includes(focus.focusId) ? '200px' : '0'}">
+
+            <!-- Expanded info -->
+            <div class = "expanded" v-bind:style = "[{height: fociExpanded.includes(focus.focusId) ? 'inherit' : '0'}]">
+              <!-- Level, total XP, and problems attempted list -->
               <div>
                 <div class = "descriptors">
                   <div>Level</div>
@@ -87,6 +120,8 @@
                   <div>{{ focus.presented }}</div>
                 </div>
               </div>
+
+              <!-- Problems correct, problems incorrect, and average attempts list -->
               <div>
                 <div class = "descriptors">
                   <div>Problems Correct</div>
@@ -99,6 +134,8 @@
                   <div>{{ focus.avgAttempts.toFixed(2) }}</div>
                 </div>
               </div>
+
+              <!-- Streaks list -->
               <div>
                 <div class = "descriptors">
                   <div>Longest Winstreak</div>
@@ -121,6 +158,7 @@
 
 <script>
 
+  // Imports
   import Menu from "../components/Menu";
   import User from "../components/User";
   import RadialProgressBar from "vue-radial-progress/src/RadialProgressBar";
@@ -151,8 +189,10 @@
       })
     },
     methods: {
+      // editName, change username of user to what is currently typed in
       editName: function() {
         if (this.editingName) {
+          // If name input is currently focused, then dispatch change username actions
           let self = this;
           this.$store.commit('setProcessing', true);
           this.$store.dispatch('SetUserName', this.user).then(() => {
@@ -160,39 +200,50 @@
             self.$store.dispatch("Confirmation", "Username changed successfully");
           });
         } else {
+          // Otherwise, focus it
           this.$refs.nameInput.focus();
         }
 
+        // Change editing state
         this.editingName = !this.editingName;
       },
+
+      // async changePassword, send reset password email to user
       changePassword: async function() {
         this.$store.commit('setProcessing', true);
         await this.$store.dispatch('PasswordReset', this.$store.getters.Email);
         this.$store.commit('setProcessing', false);
         this.$store.dispatch("Confirmation", "Password reset email successfully sent to " + this.$store.getters.Email);
       },
+
+      // cancelNameEdit, stop editing name and reset name to what was previously saved
       cancelNameEdit: function() {
         this.user = this.$store.getters.StateUser;
         this.editingName = false;
       },
+
+      // toggleBreakdown, toggle focus breakdown
       toggleBreakdown: function() {
         this.breakdown = !this.breakdown;
       },
+
+      // toggleFocusExpand, expand a focus row in the breakdown section
       toggleFocusExpand: function(focusId) {
         if (this.fociExpanded.includes(focusId)) {
+          // If focus is already expanded (in the expanded array), then unexpand it (remove it from array)
           this.fociExpanded.splice(this.fociExpanded.indexOf(focusId), 1);
         } else {
+          // Otherwise, expand it (add it to the expanded array)
           this.fociExpanded.push(focusId);
         }
       }
-    },
-    mounted() {
     }
   }
 </script>
 
 <style scoped>
 
+  /* General styling */
   .content {
     width: calc(85% - 100px);
     position: relative;
@@ -218,13 +269,32 @@
     padding: 25px 40px;
     transition: box-shadow .3s ease;
     margin: 20px 0 0 20px;
-    height: 150px;
+    height: 200px;
+    box-sizing: border-box;
   }
 
   .box:hover {
     box-shadow: 0 0 10px 13px rgba(17, 21, 33, 0.3);
   }
 
+  @media only screen and (max-width: 990px) {
+    .content {
+      flex-direction: column;
+    }
+  }
+
+  @media only screen and (max-width: 700px) {
+    .content {
+      width: 90%;
+      margin: 50px 0 -50px 5%;
+    }
+
+    .box {
+      margin: 20px 0 0 0;
+    }
+  }
+
+  /* Beta popup styling */
   #beta {
     height: inherit;
     font-family: "Nunito", sans-serif;
@@ -250,8 +320,8 @@
     font-family: "Antic", sans-serif;
   }
 
+  /* User profile styling */
   #profile {
-    width: 45%;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -292,18 +362,19 @@
 
   .profile-info {
     margin-left: 30px;
-    padding: 8px 0 15px 0;
+    padding: 8px 15px 15px 0;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     justify-content: space-evenly;
     align-items: flex-start;
-    height: 75%;
+    height: 90%;
   }
 
   .username {
     font-family: "Montserrat", sans-serif;
     font-size: 14px;
-    width: 200px;
+    width: 180px;
     border: 1px solid rgba(29, 34, 41, 0.2);
     border-radius: 6px;
     padding: 8px 12px;
@@ -331,6 +402,57 @@
     color: #ff2540;
   }
 
+  @media only screen and (max-width: 990px) {
+    #profile {
+      width: 100%;
+    }
+
+    .username {
+      width: 215px;
+    }
+  }
+
+  @media only screen and (max-width: 500px) {
+    #profile {
+      flex-direction: column;
+      height: inherit;
+    }
+
+    .profile-info {
+      height: 165px;
+      margin-left: 0;
+      align-items: center;
+    }
+
+    .username {
+      width: 100%;
+      margin-left: 20px;
+    }
+
+    .username input {
+      width: inherit;
+    }
+  }
+
+  @media only screen and (min-width: 1200px) {
+    #profile {
+      width: 55%;
+    }
+
+    .username {
+      width: 250px;
+      margin-right: 100px;
+    }
+  }
+
+  @media only screen and (min-width: 1100px) {
+    .username {
+      width: 225px;
+      margin-right: 40px;
+    }
+  }
+
+  /* Stats overview styling */
   #overview {
     display: flex;
     flex-direction: column;
@@ -347,11 +469,15 @@
     margin-right: 30px;
   }
 
+  #overview .row.attempted div {
+    margin-right: 10px;
+  }
+
   #overview h3 {
     font-family: "Nunito", sans-serif;
     font-size: 16px;
     border-bottom: 1px solid black;
-    font-weight: light;
+    font-weight: lighter;
   }
 
   #overview p {
@@ -360,10 +486,21 @@
     margin-top: 5px;
   }
 
+  @media only screen and (max-width: 990px) {
+    #overview {
+      flex-direction: row;
+      flex-wrap: wrap;
+      height: inherit;
+    }
+  }
+
+  /* Stats summary styling */
   #summary {
     width: 100%;
     padding: 50px 0;
+    box-sizing: border-box;
     display: flex;
+    height: auto;
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: space-between;
@@ -373,6 +510,7 @@
     bottom: 20px;
     font-family: "Montserrat", sans-serif;
     font-size: 40px;
+    margin-bottom: -50px;
   }
 
   .xp {
@@ -382,9 +520,10 @@
 
   .summary-info {
     display: flex;
+    margin-bottom: 0;
     flex-direction: row;
     justify-content: space-around;
-    height: 100%;
+    height: 150px;
     box-sizing: border-box;
     padding: 20px 5% 20px 8%;
     width: 35%;
@@ -413,6 +552,61 @@
     text-align: right;
   }
 
+  @media only screen and (max-width: 1200px) {
+    .summary-info {
+      font-size: 14px;
+    }
+  }
+
+  @media only screen and (max-width: 1150px) {
+    .summary-info {
+      font-size: 13px;
+    }
+  }
+
+  @media only screen and (max-width: 1100px) {
+    .summary-info {
+      padding: 30px 5%;
+      font-size: 14px;
+    }
+
+    .summary-info.right {
+      padding: 30px 5%;
+    }
+  }
+
+  @media only screen and (max-width: 990px) {
+    #summary {
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+
+    .progress-bar-div {
+      margin-bottom: 40px;
+    }
+
+    .progress-bar {
+      margin-top: 30px;
+      margin-bottom: 30px;
+    }
+
+    .summary-info {
+      width: 65%;
+      min-width: 260px;
+      border-radius: 20px;
+    }
+
+    .summary-info.right {
+      border-radius: 20px;
+    }
+
+    .summary-info.right .descriptors {
+      text-align: left;
+    }
+  }
+
+  /* Focus breakdown styling */
   #breakdown {
     height: inherit;
     width: 100%;
@@ -497,16 +691,17 @@
     transition: transform .3s ease;
   }
 
-
   #breakdown .expanded {
     overflow: hidden;
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-evenly;
     transition: height .3s ease;
     font-family: "Nunito", sans-serif;
     font-size: 13px;
+    padding: 10px 0;
   }
 
   #breakdown .expanded > div {
@@ -517,7 +712,7 @@
     padding: 25px 40px;
     display: flex;
     flex-direction: row;
-    margin-top: -10px;
+    margin: 10px 5px;
   }
 
   #breakdown .breakdown-focus:hover .expanded > div {
@@ -542,5 +737,28 @@
     text-align: right;
   }
 
+  @media only screen and (max-width: 600px) {
+    #breakdown {
+      padding: 40px 30px;
+    }
+  }
+
+  @media only screen and (max-width: 800px) {
+    #breakdown .initial {
+      flex-direction: column;
+      height: inherit;
+      padding: 25px 0 5px 0;
+    }
+
+    #breakdown h3 {
+      width: 100%;
+      text-align: center;
+    }
+
+    #breakdown .progress-bar {
+      width: 100%;
+      margin: 5px 0;
+    }
+  }
 
 </style>
