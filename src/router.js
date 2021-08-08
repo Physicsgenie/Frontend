@@ -52,6 +52,12 @@ const router = new Router({
       meta: {requiresAuth: true}
     },
     {
+      path: '/leaderboard',
+      name: 'leaderboard',
+      component: () => import(/* webpackChunkName: "review" */ './views/Leaderboard.vue'),
+      meta: {requiresAuth: true}
+    },
+    {
       path: '/setup',
       name: 'setup',
       component: () => import(/* webpackChunkName: "setup" */ './views/Setup.vue'),
