@@ -18,10 +18,10 @@
       <div id = "past-problems">
         <div v-for = "problem in problems" class = "problem">
           <div class = "buttons">
-            <button class = "button orange" v-on:click = "edit(problem.problemID)"><i class = "fa fa-pencil"></i>Edit</button>
+            <button class = "button orange" v-on:click = "edit(problem.problem_id)"><i class = "fa fa-pencil"></i>Edit</button>
             <button class = "button" v-on:click = "previewProblem(problem)"><i class = "fa fa-eye"></i>Preview</button>
           </div>
-          <div class = "topic-focus"><span class = "topic">{{ problem.topicName }}</span>><span class = "focus">{{ problem.mainFocusName }}</span></div>
+          <div class = "topic-focus"><span class = "topic">{{ problem.topic }}</span>><span class = "focus">{{ problem.main_focus }}</span></div>
           <p class = "problem-text"><vue-mathjax :formula = "problem.problemTextShortened" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></p>
           <div class = "info">
             <h6 class = "source">{{ problem.sourceName }}</h6>

@@ -45,7 +45,7 @@
         <div class = "row attempted">
           <div>
             <h3>Problems Attempted</h3>
-            <p>{{ userStats.presented }}</p>
+            <p>{{ userStats.num_completed }}</p>
           </div>
         </div>
       </div>
@@ -60,9 +60,9 @@
             <div>Average Attempts</div>
           </div>
           <div class = "values">
-            <div>{{ userStats.correct }}</div>
-            <div>{{ userStats.presented - userStats.correct }}</div>
-            <div>{{ userStats.avgAttempts.toFixed(2) }}</div>
+            <div>{{ userStats.num_correct }}</div>
+            <div>{{ userStats.num_incorrect }}</div>
+            <div>{{ userStats.avg_attempts.toFixed(2) }}</div>
           </div>
         </div>
 
@@ -82,31 +82,31 @@
             <div>Current Streak</div>
           </div>
           <div class = "values">
-            <div>{{ userStats.longestWinstreak }}</div>
-            <div>{{ userStats.longestLosestreak }}</div>
+            <div>{{ userStats.longest_winstreak }}</div>
+            <div>{{ userStats.longest_losestreak }}</div>
             <div>{{ (userStats.streak === 0 ? "" : (userStats.streak > 0 ? "+" : "-")) + Math.abs(userStats.streak)}}</div>
           </div>
         </div>
       </div>
 
       <!-- Focus breakdown (only shows if at least one focus has at least one problem presented) -->
-      <div id = "breakdown" class = "box" v-if = "userStats.topics[0].foci.filter(function(focusTemp) {return focusTemp.presented > 0}).length > 0">
+      <div id = "breakdown" class = "box" v-if = "userStats.topic_stats[0].focus_stats.length > 0">
         <!-- Title and breakdown toggle button -->
         <h1 v-on:click = "toggleBreakdown"><i class = "fa fa-angle-right" v-bind:style = "[{transform: breakdown ? 'rotate(90deg)' : 'rotate(0deg)'}, {marginRight: breakdown ? '12px' : '8px'}]"></i>Focus Breakdown</h1>
 
         <!-- Breakdown (only shows if toggled on) -->
         <div v-if = "breakdown">
           <!-- One entry for each focus with at least one problem presented (sorted by xp) -->
-          <div v-for = "focus in userStats.topics[0].foci.filter(function(focusTemp) {return focusTemp.presented > 0}).sort((firstEl, secondEl) => {return (secondEl.xp > firstEl.xp ? 1 : -1)})" v-bind:key = "focus.focusId" class = "breakdown-focus">
+          <div v-for = "focus in userStats.topic_stats[0].focus_stats.filter(function(focus) {return focus.num_completed > 0}).sort(function(focus1, focus2) {return focus2.xp - focus1.xp})" v-bind:key = "focus.focus" class = "breakdown-focus">
             <!-- Initial info (unexpanded) -->
             <div class = "initial">
               <h3>{{ focus.focus }} ({{ focus.xp }})</h3>
               <ProgressBar class = "progress-bar" v-bind:xp = "focus.xp" v-bind:add = "null" />
-              <i class = "fa fa-angle-down" v-on:click = "toggleFocusExpand(focus.focusId)" v-bind:style = "{transform: fociExpanded.includes(focus.focusId) ? 'rotate(180deg)' : 'rotate(0deg)'}"></i>
+              <i class = "fa fa-angle-down" v-on:click = "toggleFocusExpand(focus)" v-bind:style = "{transform: fociExpanded.includes(focus) ? 'rotate(180deg)' : 'rotate(0deg)'}"></i>
             </div>
 
             <!-- Expanded info -->
-            <div class = "expanded" v-bind:style = "[{height: fociExpanded.includes(focus.focusId) ? 'inherit' : '0'}]">
+            <div class = "expanded" v-bind:style = "[{height: fociExpanded.includes(focus) ? 'inherit' : '0'}]">
               <!-- Level, total XP, and problems attempted list -->
               <div>
                 <div class = "descriptors">
@@ -117,7 +117,7 @@
                 <div class = "values">
                   <div>{{ Math.floor(Math.sqrt(focus.xp+9))-2 }}</div>
                   <div>{{ focus.xp }}</div>
-                  <div>{{ focus.presented }}</div>
+                  <div>{{ focus.num_completed }}</div>
                 </div>
               </div>
 
@@ -129,9 +129,9 @@
                   <div>Average Attempts</div>
                 </div>
                 <div class = "values">
-                  <div>{{ focus.correct }}</div>
-                  <div>{{ focus.presented - focus.correct }}</div>
-                  <div>{{ focus.avgAttempts.toFixed(2) }}</div>
+                  <div>{{ focus.num_correct }}</div>
+                  <div>{{ focus.num_incorrect }}</div>
+                  <div>{{ focus.avg_attempts.toFixed(2) }}</div>
                 </div>
               </div>
 
@@ -143,8 +143,8 @@
                   <div>Current Streak</div>
                 </div>
                 <div class = "values">
-                  <div>{{ focus.longestWinstreak }}</div>
-                  <div>{{ focus.longestLosestreak }}</div>
+                  <div>{{ focus.longest_winstreak }}</div>
+                  <div>{{ focus.longest_losestreak }}</div>
                   <div>{{ (focus.streak === 0 ? "" : (focus.streak > 0 ? "+" : "-")) + Math.abs(focus.streak)}}</div>
                 </div>
               </div>
@@ -228,15 +228,18 @@
       },
 
       // toggleFocusExpand, expand a focus row in the breakdown section
-      toggleFocusExpand: function(focusId) {
-        if (this.fociExpanded.includes(focusId)) {
+      toggleFocusExpand: function(focus) {
+        if (this.fociExpanded.includes(focus)) {
           // If focus is already expanded (in the expanded array), then unexpand it (remove it from array)
-          this.fociExpanded.splice(this.fociExpanded.indexOf(focusId), 1);
+          this.fociExpanded.splice(this.fociExpanded.indexOf(focus), 1);
         } else {
           // Otherwise, expand it (add it to the expanded array)
-          this.fociExpanded.push(focusId);
+          this.fociExpanded.push(focus);
         }
       }
+    },
+    mounted() {
+      console.log(this.userStats);
     }
   }
 </script>

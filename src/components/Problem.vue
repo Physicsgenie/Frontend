@@ -7,13 +7,13 @@
     <div id = "progress-bars">
       <!-- Topic progress bar (only shows if window width is greater than 850px -->
       <div class = "topic" v-if = "$store.getters.WindowWidth > 850">
-        <h4>{{ problem.topicName }}</h4>
+        <h4>{{ problem.topic }}</h4>
         <ProgressBar class = "progress-bar" v-bind:xp = "topicStatsXP" v-bind:add = "add" />
       </div>
 
       <!-- Focus progress bar -->
       <div class = "focus">
-        <h4>{{ problem.mainFocusName }}</h4>
+        <h4>{{ problem.mainFocus }}</h4>
         <ProgressBar class = "progress-bar" v-bind:xp = "focusStatsXP" v-bind:add = "add" />
       </div>
     </div>
@@ -36,7 +36,7 @@
         </div>
 
         <!-- Main focus -->
-        <div class = "main-focus"><span class = "topic">{{ problem.topicName }}</span>><span class = "focus">{{ problem.mainFocusName }}</span></div>
+        <div class = "main-focus"><span class = "topic">{{ problem.topic }}</span>><span class = "focus">{{ problem.mainFocus }}</span></div>
 
         <!-- Other foci -->
         <div class = "secondary-focus" v-if = "problem.otherFoci.length > 0" v-bind:title = "otherFociList">{{ otherFociList.length > 40 ? otherFociList.substring(0, 40) + "..." : otherFociList }}</div>
@@ -241,7 +241,7 @@
       // focusStats, returns user's current stats for problem's focus
       focusStats: function() {
         let self = this;
-        return this.userStats.topics.filter(function(topic) {return topic.topicId === self.problem.topic})[0].foci.filter(function(focus) {return focus.focusId === self.problem.mainFocus})[0];
+        return this.userStats.topic_stats.filter(function(topic) {return topic.topic === self.problem.topic})[0].focus_stats.filter(function(focus) {return focus.focus === self.problem.mainFocus})[0];
       },
 
       // topicStatsXP, calculates xp that should be shown on topic progress bar
@@ -249,7 +249,7 @@
         let self = this;
 
         // Gets user's current stats for problem's topic
-        let xp = this.userStats.topics.filter(function(topic) {return topic.topicId === self.problem.topic})[0].xp;
+        let xp = this.userStats.topic_stats.filter(function(topic) {return topic.topic === self.problem.topic})[0].xp;
 
         // Logic to calculate what new xp will be when processing result to ensure progress bar updates right when result is shown (rather than being delayed to when user stats are updated)
         if (this.processingResult === "correct" && this.focusStats.streak > 0 && (this.focusStats.streak + 1) % 5 === 0) {
@@ -318,17 +318,19 @@
           // Encoded Mathematica request
           const request = encodeURI(wolframURL + "?studentAnswer=" + self.currAnswer + "&correctAnswer=" + self.problem.answer + "&error=" + self.problem.error + "&mustMatch=" + (self.problem.mustMatch ? "true" : "false"));
 
-          // API POST request to /external-request with Mathematica reuquest string as URL
+          // API POST request to /external-request with Mathematica request string as URL
           axios.post("wp-json/physics_genie/external-request", {
             method: "GET",
             url: request
           }).then((response) => {
             // If response is "True" run correct function, otherwise run incorrect function
-            if (response.data === "True") {
-              self.correct();
-            } else {
-              self.incorrect();
-            }
+            axios.post("wp-json/physics_genie/submit-attempt", JSON.stringify({problem_id: self.problem.problemID, student_answer: self.currAnswer, correct: response.data === "True"}), {headers: {"Content-Type": "application/json", 'Authorization': 'Bearer ' + self.$store.getters.Token}}).then((res) => {
+              if (JSON.parse(res.data).correct) {
+                self.correct();
+              } else {
+                self.incorrect();
+              }
+            });
           });
         }
       },
@@ -440,6 +442,9 @@
         // Reset result
         this.result = "";
       }
+    },
+    mounted() {
+      console.log(this.problem);
     }
   }
 </script>

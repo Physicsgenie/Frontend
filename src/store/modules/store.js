@@ -13,16 +13,7 @@ const state = {
     foci: [],
     calculus: null
   },
-  userStats: {
-    topics: [],
-    presented: null,
-    correct: null,
-    avgAttempts: null,
-    xp: null,
-    streak: null,
-    longestWinstreak: null,
-    longestLosestreak: null
-  },
+  userStats: null,
   currProblem: {
     problemID: null,
     problemText: "",
@@ -130,114 +121,109 @@ const actions = {
   async GetUserInfo({commit, getters}) {
     let response = await axios.get('wp-json/physics_genie/user-info', {headers: {'Authorization': 'Bearer ' + getters.Token}});
 
+    let data = JSON.parse(response.data);
+
     commit('setUserSetup', {
-      difficulty: response.data.setup.curr_diff,
-      topics: response.data.setup.curr_topics.split(""),
-      foci: response.data.setup.curr_foci.split(""),
-      calculus: response.data.setup.calculus === "1"
+      difficulty: data.setup.curr_diff,
+      topics: data.setup.curr_topics,
+      foci: data.setup.curr_foci,
+      calculus: data.setup.calculus === "1"
     });
   },
   async GetProblemMetadata({commit}) {
     let response = await axios.get('wp-json/physics_genie/submit-data');
-    commit('setProblemMetaData', response.data);
+    console.log(JSON.parse(response.data));
+    commit('setProblemMetaData', JSON.parse(response.data));
   },
   async GetCurrProblem({commit, getters}) {
     let response = await axios.get('wp-json/physics_genie/problem', {headers: {'Authorization': 'Bearer ' + getters.Token}});
     if (response.data === "") {
       commit('setCurrProblem', null);
     } else {
-      let foci = [];
-      if (response.data.other_foci !== null) {
-        response.data.other_foci.split("").forEach(function(otherFocus) {
-          foci.push(getters.ProblemMetaData.focuses.filter(function(focus) {return focus.focus === otherFocus})[0].name);
-        });
-      }
 
+      let data = JSON.parse(response.data);
       let source = null;
 
-      if (getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === response.data.source}).length > 0) {
-        source = getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === response.data.source})[0];
+      if (getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === data.source}).length > 0) {
+        source = getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === data.source})[0];
       }
 
 
       commit('setCurrProblem', {
-        problemID: response.data.problem_id,
-        problemText: response.data.problem_text.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
-        diagram: (response.data.diagram === null) ? null : response.data.diagram.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
-        answer: response.data.answer.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
-        mustMatch: response.data.must_match === "1",
-        error: response.data.error,
-        solution: response.data.solution.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
-        solutionDiagram: (response.data.solution_diagram === null) ? null : response.data.solution_diagram.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
-        hintOne: response.data.hint_one.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
-        hintTwo: (response.data.hint_two === null) ? null : response.data.hint_two.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
-        difficulty: response.data.difficulty,
-        topic: response.data.topic,
-        topicName: getters.ProblemMetaData.topics.filter(function(topic) {return topic.topic === response.data.topic})[0].name,
-        mainFocus: response.data.main_focus,
-        mainFocusName: getters.ProblemMetaData.focuses.filter(function(focus) {return focus.focus === response.data.main_focus})[0].name,
-        otherFoci: foci,
+        problemID: data.problem_id,
+        problemText: data.problem_text.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+        diagram: (data.diagram === null) ? null : data.diagram.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+        answer: data.answer.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+        mustMatch: data.must_match === "1",
+        error: data.error,
+        solution: data.solution.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+        solutionDiagram: (data.solution_diagram === null) ? null : data.solution_diagram.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+        hintOne: data.hint_one.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+        hintTwo: (data.hint_two === null) ? null : data.hint_two.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+        difficulty: data.difficulty,
+        topic: data.topic,
+        mainFocus: data.main_focus,
+        otherFoci: data.other_foci,
         source: source,
-        problemNumber: response.data.number_in_source
+        problemNumber: data.number_in_source
       });
     }
   },
   async GetUserStats({commit, getters}) {
     let response = await axios.get('wp-json/physics_genie/user-stats', {headers: {'Authorization': 'Bearer ' + getters.Token}});
 
-    let overall = response.data.filter(function(row) {return row.topic === "z" && row.focus === "z"})[0];
+    // let overall = response.data.filter(function(row) {return row.topic === "z" && row.focus === "z"})[0];
+    //
+    // let stats = {
+    //   topics: [],
+    //   presented: parseInt(overall.num_presented),
+    //   correct: parseInt(overall.num_correct),
+    //   avgAttempts: parseFloat(overall.avg_attempts),
+    //   xp: parseInt(overall.xp),
+    //   streak: parseInt(overall.streak),
+    //   longestWinstreak: parseInt(overall.longest_winstreak),
+    //   longestLosestreak: parseInt(overall.longest_losestreak)
+    // };
+    //
+    // getters.ProblemMetaData.topics.forEach(function(topic) {
+    //   let topicRow = response.data.filter(function(row) {return row.topic === topic.topic && row.focus === "z"})[0];
+    //   stats.topics.push({
+    //     topic: topic.name,
+    //     topicId: topic.topic,
+    //     foci: [],
+    //     presented: parseInt(topicRow.num_presented),
+    //     correct: parseInt(topicRow.num_correct),
+    //     avgAttempts: parseFloat(topicRow.avg_attempts),
+    //     xp: parseInt(topicRow.xp),
+    //     streak: parseInt(topicRow.streak),
+    //     longestWinstreak: parseInt(topicRow.longest_winstreak),
+    //     longestLosestreak: parseInt(topicRow.longest_losestreak)
+    //   });
+    //
+    //   getters.ProblemMetaData.focuses.filter(function(focus) {return focus.topic === topic.topic}).forEach(function(focus) {
+    //     let focusRow = response.data.filter(function(row) {return row.topic === topic.topic && row.focus === focus.focus})[0];
+    //     stats.topics[stats.topics.length - 1].foci.push({
+    //       focus: focus.name,
+    //       focusId: focus.focus,
+    //       presented: parseInt(focusRow.num_presented),
+    //       correct: parseInt(focusRow.num_correct),
+    //       avgAttempts: parseFloat(focusRow.avg_attempts),
+    //       xp: parseInt(focusRow.xp),
+    //       streak: parseInt(focusRow.streak),
+    //       longestWinstreak: parseInt(focusRow.longest_winstreak),
+    //       longestLosestreak: parseInt(focusRow.longest_losestreak)
+    //     });
+    //   });
+    // });
 
-    let stats = {
-      topics: [],
-      presented: parseInt(overall.num_presented),
-      correct: parseInt(overall.num_correct),
-      avgAttempts: parseFloat(overall.avg_attempts),
-      xp: parseInt(overall.xp),
-      streak: parseInt(overall.streak),
-      longestWinstreak: parseInt(overall.longest_winstreak),
-      longestLosestreak: parseInt(overall.longest_losestreak)
-    };
-
-    getters.ProblemMetaData.topics.forEach(function(topic) {
-      let topicRow = response.data.filter(function(row) {return row.topic === topic.topic && row.focus === "z"})[0];
-      stats.topics.push({
-        topic: topic.name,
-        topicId: topic.topic,
-        foci: [],
-        presented: parseInt(topicRow.num_presented),
-        correct: parseInt(topicRow.num_correct),
-        avgAttempts: parseFloat(topicRow.avg_attempts),
-        xp: parseInt(topicRow.xp),
-        streak: parseInt(topicRow.streak),
-        longestWinstreak: parseInt(topicRow.longest_winstreak),
-        longestLosestreak: parseInt(topicRow.longest_losestreak)
-      });
-
-      getters.ProblemMetaData.focuses.filter(function(focus) {return focus.topic === topic.topic}).forEach(function(focus) {
-        let focusRow = response.data.filter(function(row) {return row.topic === topic.topic && row.focus === focus.focus})[0];
-        stats.topics[stats.topics.length - 1].foci.push({
-          focus: focus.name,
-          focusId: focus.focus,
-          presented: parseInt(focusRow.num_presented),
-          correct: parseInt(focusRow.num_correct),
-          avgAttempts: parseFloat(focusRow.avg_attempts),
-          xp: parseInt(focusRow.xp),
-          streak: parseInt(focusRow.streak),
-          longestWinstreak: parseInt(focusRow.longest_winstreak),
-          longestLosestreak: parseInt(focusRow.longest_losestreak)
-        });
-      });
-    });
-
-    commit('setUserStats', stats);
+    commit('setUserStats', JSON.parse(response.data));
   },
   async GetSubmittedProblems({commit, getters}) {
-    let submitData = getters.ProblemMetaData;
     await axios.get('wp-json/physics_genie/contributor-problems', {headers: {'Authorization': 'Bearer ' + getters.Token}}).then((response) => {
-      let problems = [];
-      response.data.forEach(function(problem) {
-
-          let problemTextShortened = problem.problem_text.replace(/\\\\/g, "\\").replace(/\\"/g, "'");
+      let problems = JSON.parse(response.data);
+      console.log(problems);
+      for (let i = 0; i < problems.length; i++) {
+        let problemTextShortened = problems[i].problem_text.replace(/\\\\/g, "\\").replace(/\\"/g, "'");
 
         if (problemTextShortened.length > 200) {
           problemTextShortened = problemTextShortened.slice(0, 200);
@@ -248,66 +234,14 @@ const actions = {
           problemTextShortened += " ...";
         }
 
-        let errorMessage = "[[COULD NOT BE FOUND]]";
+        problems[i].problemTextShortened = problemTextShortened;
 
-        let sourceName;
-        if (submitData.sources.filter(function(source) {return source.source_id === problem.source})[0] === undefined) {
-          sourceName = errorMessage;
-        } else {
-          sourceName = submitData.sources.filter(function(source) {return source.source_id === problem.source})[0].source;
+        problems[i].sourceName = null;
+
+        if (getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === problems[i].source}).length > 0) {
+          problems[i].sourceName = getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === problems[i].source})[0].source;
         }
-
-        let topicName;
-        if (submitData.topics.filter(function(topic) {return topic.topic === problem.topic})[0] === undefined) {
-          topicName = errorMessage;
-        } else {
-          topicName = submitData.topics.filter(function(topic) {return topic.topic === problem.topic})[0].name;
-        }
-
-        let mainFocusName;
-        if (submitData.focuses.filter(function(focus) {return focus.focus === problem.main_focus})[0] === undefined) {
-          mainFocusName = errorMessage;
-        } else {
-          mainFocusName = submitData.focuses.filter(function(focus) {return focus.focus === problem.main_focus})[0].name;
-        }
-
-
-        let foci = [];
-        if (problem.other_foci !== null) {
-          problem.other_foci.split("").forEach(function(otherFocus) {
-            if (submitData.focuses.filter(function(focus) {return focus.focus === otherFocus})[0] === undefined) {
-              foci.push(errorMessage);
-            } else {
-              foci.push(submitData.focuses.filter(function(focus) {return focus.focus === otherFocus})[0].name);
-            }
-          });
-        }
-        problems.push({
-          problemID: problem.problem_id,
-          problemText: problem.problem_text.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
-          problemTextShortened: problemTextShortened,
-          diagram: (problem.diagram === null) ? null : problem.diagram.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
-          hintOne: problem.hint_one.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
-          hintTwo: (problem.hint_two === null) ? null : problem.hint_two.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
-          answer: problem.answer.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
-          mustMatch: problem.must_match === "1",
-          error: problem.error,
-          solution: problem.solution.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
-          solutionDiagram: (problem.solution_diagram === null) ? null : problem.solution_diagram.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
-          topic: problem.topic,
-          topicName: topicName,
-          mainFocus: problem.main_focus,
-          mainFocusName: mainFocusName,
-          otherFoci: foci,
-          source: problem.source,
-          sourceName: sourceName,
-          numberInSource: problem.number_in_source,
-          submitter: problem.submitter,
-          difficulty: problem.difficulty,
-          calculus: problem.calculus,
-          dateAdded: problem.date_added
-        });
-      });
+      }
       commit('setSubmittedProblems', problems)
     });
   },
