@@ -20,7 +20,7 @@
             <!-- Topics selector -->
             <div class = "topics selector">
               <label>Topics</label>
-              <v-select placeholder = "Select the topics you would like to practice" label = "name" :options = "submitData.topics" :reduce = "topic => topic.topic" v-model = "userSetup.topics" multiple></v-select>
+              <v-select placeholder = "Select the topics you would like to practice" label = "name" :options = "submitData.topics" :reduce = "topic => topic.name" v-model = "userSetup.topics" multiple></v-select>
               <button v-on:click = "addAllTopics" class = "add-all"><i class = "fa fa-plus"></i>Add All Topics</button>
               <button v-on:click = "removeAllTopics" class = "remove-all"><i class = "fa fa-minus"></i>Remove All Topics</button>
             </div>
@@ -28,7 +28,7 @@
             <!-- Foci selector -->
             <div class = "foci selector">
               <label>Focuses</label>
-              <v-select placeholder = "Select the focuses you would like to practice" label = "name" :options = "submitData.focuses" :reduce = "focus => focus.focus" v-model = "userSetup.foci" multiple></v-select>
+              <v-select placeholder = "Select the focuses you would like to practice" label = "name" :options = "submitData.focuses" :reduce = "focus => focus.name" v-model = "userSetup.foci" multiple></v-select>
               <button v-on:click = "addAllFoci" class = "add-all"><i class = "fa fa-plus"></i>Add All Focuses</button>
               <button v-on:click = "removeAllFoci" class = "remove-all"><i class = "fa fa-minus"></i>Remove All Focuses</button>
             </div>
@@ -121,11 +121,12 @@ export default {
     // addAllTopics, add all topics to current topics list
     addAllTopics: function() {
       let self = this;
+
       // Loops through all possible topics
       this.submitData.topics.forEach(function(topic) {
         // Tests if possible topic is already in current topics list, and if it's not, appends it to list
-        if (!self.userSetup.topics.includes(topic.topic)) {
-          self.userSetup.topics.push(topic.topic);
+        if (!self.userSetup.topics.includes(topic.name)) {
+          self.userSetup.topics.push(topic.name);
         }
       });
     },
@@ -138,11 +139,12 @@ export default {
     // addAllFoci, add all foci to current foci list
     addAllFoci: function() {
       let self = this;
+
       // Loops through all possible foci
       this.submitData.focuses.forEach(function(focus) {
         // Tests if possible focus is already in current foci list, and if it's not, appends it to list
-        if (!self.userSetup.foci.includes(focus.focus)) {
-          self.userSetup.foci.push(focus.focus);
+        if (!self.userSetup.foci.includes(focus.name)) {
+          self.userSetup.foci.push(focus.name);
         }
       });
     },
@@ -183,12 +185,12 @@ export default {
         this.$store.commit('setProcessing', true);
 
         // API PUT request to /user-setup with new user settings as params
-        axios.put('wp-json/physics_genie/user-setup', {
+        axios.put('wp-json/physics_genie/user-setup', JSON.stringify({
           curr_diff: this.userSetup.difficulty,
-          curr_topics: this.userSetup.topics.toString().replace(/,/g, ''),
-          curr_foci: this.userSetup.foci.toString().replace(/,/g, ''),
-          calculus: this.userSetup.calculus ? "true" : "false"
-        }, {headers: {'Authorization': 'Bearer ' + this.$store.getters.Token}}).then(() => {
+          curr_topics: this.userSetup.topics,
+          curr_foci: this.userSetup.foci,
+          calculus: this.userSetup.calculus
+        }), {headers: {'Content-Type': 'application/json','Authorization': 'Bearer ' + this.$store.getters.Token}}).then(() => {
           // If no current problem, then set current problem with current user settings
           if (self.$store.getters.CurrProblem === null) {
             self.$store.dispatch('GetCurrProblem');
@@ -200,7 +202,6 @@ export default {
     }
   }
 }
-
 </script>
 
 <style scoped>

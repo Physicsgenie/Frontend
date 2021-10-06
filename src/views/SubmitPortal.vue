@@ -135,14 +135,14 @@
           <div class = "input-container topic">
             <select id = "topic" name = "topic" v-bind:style = "(currSubmission.topic !== '') ? {color: 'black'} : {color: '#929292'}" v-on:change = "function(event) {setCurrSubmissionField('topic', event.target.value)}">
               <option disabled selected value> -- Select a Topic -- </option>
-              <option v-for = "topic in submitData.topics" v-bind:key = "topic.name" v-bind:selected = "topic.topic === currSubmission.topic" v-bind:value = "topic.topic">{{ topic.name }}</option>
+              <option v-for = "topic in submitData.topics" v-bind:key = "topic.name" v-bind:selected = "topic.name === currSubmission.topic" v-bind:value = "topic.name">{{ topic.name }}</option>
             </select>
           </div>
           <div class = "input-container">
             <h6>Main Focus</h6>
             <select id = "main-focus" name = "main-focus" v-bind:style = "(currSubmission.mainFocus !== '') ? {color: 'black'} : {color: '#929292'}" v-on:change = "function(event) {setCurrSubmissionField('mainFocus', event.target.value)}">
               <option disabled selected value> -- Select a Focus -- </option>
-              <option v-for = "focus in submitData.focuses" v-bind:key = "focus.name" v-bind:selected = "focus.focus === currSubmission.mainFocus" v-bind:value = "focus.focus">{{ focus.name }}</option>
+              <option v-for = "focus in submitData.focuses" v-bind:key = "focus.name" v-bind:selected = "focus.name === currSubmission.mainFocus" v-bind:value = "focus.name">{{ focus.name }}</option>
             </select>
           </div>
           <div class = "input-container">
@@ -150,7 +150,7 @@
             <div class = "other-foci">
               <div v-for = "(focus, index) in currSubmission.otherFoci" class = "other-focus" v-bind:key = "index">
                 <select v-bind:name = "'focus_' + index" v-on:change = "focusesChanged($event, index)">
-                  <option v-for = "(possibleFocus, i) in submitData.focuses" v-bind:key = "i" v-bind:selected = "focus === possibleFocus.focus" v-bind:disabled = "focus !== possibleFocus.focus && (currSubmission.otherFoci.includes(possibleFocus.focus))" v-bind:value = "possibleFocus.focus">{{ possibleFocus.name }}</option>
+                  <option v-for = "(possibleFocus, i) in submitData.focuses" v-bind:key = "i" v-bind:selected = "focus === possibleFocus.name" v-bind:disabled = "focus !== possibleFocus.name && (currSubmission.otherFoci.includes(possibleFocus.name))" v-bind:value = "possibleFocus.name">{{ possibleFocus.name }}</option>
                 </select>
                 <i class = "fa fa-times" style = "color: red; cursor: pointer;" v-on:click = "removeFocus(index)"></i>
               </div>
@@ -273,6 +273,18 @@
       },
       algebraicAnswer: function() {
         return this.$store.functions.testAlgebraic(this.currSubmission.answer);
+      }
+    },
+    watch: {
+      currSubmission: {
+        deep: true,
+        handler(value) {
+          if (this.$route.params.id === undefined) {
+            this.$store.commit('setCurrSubmission', value);
+          } else {
+            this.$store.commit('setCurrSubmissionEdit', value);
+          }
+        }
       }
     },
     methods: {
@@ -425,10 +437,10 @@
       },
       addFocus: function() {
         let i = 0;
-        while(this.currSubmission.otherFoci.includes(this.submitData.focuses[i].focus)) {
+        while(this.currSubmission.otherFoci.includes(this.submitData.focuses[i].name)) {
           i++;
         }
-        this.currSubmission.otherFoci.push(this.submitData.focuses[i].focus);
+        this.currSubmission.otherFoci.push(this.submitData.focuses[i].name);
       },
       focusesChanged: function(event, index) {
         this.$set(this.currSubmission.otherFoci, index, event.target.value);
@@ -548,35 +560,31 @@
     mounted() {
       let self = this;
       if (this.$route.params.id !== undefined) {
-        let problem = this.$store.getters.SubmittedProblems.filter(function(problem) {return problem.problemID === self.$route.params.id})[0];
-        let otherFoci = [];
-        problem.otherFoci.forEach(function(otherFocus) {
-          otherFoci.push(self.submitData.focuses.filter(function(focus) {return focus.name === otherFocus})[0].focus);
-        });
+        let problem = this.$store.getters.SubmittedProblems.filter(function(problem) {return problem.problem_id === self.$route.params.id})[0];
         this.currSubmission = {
           problemID: parseInt(this.$route.params.id),
-          problemText: problem.problemText,
+          problemText: problem.problem_text,
           diagram: problem.diagram === null ? "" : problem.diagram,
           diagramFile: null,
           diagramType: problem.diagram === null ? "none" : "code",
-          hintOne: problem.hintOne,
-          hintTwo: problem.hintTwo === null ? "": problem.hintTwo,
-          hintTwoInclude: problem.hintTwo !== null,
+          hintOne: problem.hint_one,
+          hintTwo: problem.hint_two === null ? "": problem.hint_two,
+          hintTwoInclude: problem.hint_two !== null,
           answer: problem.answer,
-          mustMatch: problem.mustMatch,
+          mustMatch: problem.must_match,
           error: problem.error,
           solution: problem.solution,
-          solutionDiagram: problem.solutionDiagram === null ? "" : problem.solutionDiagram,
+          solutionDiagram: problem.solution_diagram === null ? "" : problem.solution_diagram,
           solutionDiagramFile: null,
-          solutionDiagramType: problem.solutionDiagram === null ? "none" : "code",
+          solutionDiagramType: problem.solution_diagram === null ? "none" : "code",
           topic: problem.topic,
-          mainFocus: problem.mainFocus,
-          otherFoci: otherFoci,
+          mainFocus: problem.main_focus,
+          otherFoci: problem.other_foci,
           source: problem.source,
           category: "",
           author: "",
           sourceOther: "",
-          problemNumber: problem.numberInSource,
+          problemNumber: problem.number_in_source,
           difficulty: problem.difficulty,
           calculus: problem.calculus
         };
