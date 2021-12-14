@@ -24,6 +24,29 @@
       <!-- Leaderboard -->
       <div class = "leaderboard">
         <h2>{{ type === 0 ? "XP" : (type === 1 ? "Problems Correct" : (type === 2) ? "Streaks" : "Problems Submitted") }} Leaderboard ({{ range === 0 ? "Overall" : "Week" }})</h2>
+        <div class = "filters">
+
+        </div>
+        <div class = "table">
+          <div class = "cell">
+            <div class = "user"><h3 style = "padding-left: 50px;">User</h3></div>
+            <div style = "width: 10%"><h3>Level</h3></div>
+            <div style = "width: 10%"><h3>XP</h3></div>
+            <div style = "width: 20%" v-if = "type === 0 || type === 1"><h3>Problems Attempted</h3></div>
+            <div style = "width: 20%" v-if = "type === 0 || type === 1"><h3>Problems Correct</h3></div>
+            <div style = "width: 20%" v-if = "type === 2"><h3>Longest Streak</h3></div>
+            <div style = "width: 20%" v-if = "type === 3"><h3>Problems Submitted</h3></div>
+          </div>
+          <div class = "cell" v-for = "(entry, index) in leaderboardData" v-bind:key = "entry.user">
+            <div class = "user"><h3><span>{{ index + 1 }}</span>{{ entry.user }}</h3></div>
+            <div style = "width: 10%"><h3>{{ Math.floor(Math.sqrt(entry.xp+9))-2 }}</h3></div>
+            <div style = "width: 10%"><h3>{{ entry.xp }}</h3></div>
+            <div style = "width: 20%" v-if = "type === 0 || type === 1"><h3>{{ entry.num_presented }}</h3></div>
+            <div style = "width: 20%" v-if = "type === 0 || type === 1"><h3>{{ entry.num_correct }}</h3></div>
+            <div style = "width: 20%" v-if = "type === 2"><h3>Longest Streak</h3></div>
+            <div style = "width: 20%" v-if = "type === 3"><h3>{{ entry.submitted }}</h3></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -35,6 +58,7 @@
 // Imports
 import Menu from "../components/Menu";
 import User from "../components/User";
+import axios from 'axios';
 
 export default {
   name: "Leaderboard",
@@ -45,19 +69,35 @@ export default {
   data() {
     return {
       type: 0,
-      range: 0
+      types: ["xp", "correct", "longest_streak", "submitted"],
+      range: 0,
+      leaderboardData: null
     }
   },
   methods: {
     // changeType (type => new type value), changes type value after click
     changeType: function(type) {
       this.type = type;
+      this.updateLeaderboardData();
     },
 
     // changeRange (range => new range value), changes range value after click
     changeRange: function(range) {
       this.range = range;
+      this.updateLeaderboardData();
+    },
+
+    // updateLeaderboardData, re-requests leaderboard data and rerenders it
+    updateLeaderboardData: function() {
+      let self = this;
+      axios.post("wp-json/physics_genie/leaderboard", JSON.stringify({type: self.types[self.type]}), {"Content-Type": "application/json", headers: {'Authorization': 'Bearer ' + self.$store.getters.Token}}).then((response) => {
+        console.log("hello, ", JSON.parse(response.data));
+        self.leaderboardData = JSON.parse(response.data);
+      });
     }
+  },
+  mounted() {
+    this.updateLeaderboardData();
   }
 }
 
@@ -180,7 +220,6 @@ export default {
   box-shadow: 0 0 10px 4px rgba(17, 21, 33, 0.3);
   width: 100%;
   margin-top: 40px;
-  height: 200px;
   box-sizing: border-box;
   padding: 35px 50px;
 }
@@ -190,6 +229,46 @@ export default {
   font-size: 30px;
   padding-bottom: 15px;
   border-bottom: 1px solid black;
+}
+
+.filters {
+  height: 50px;
+}
+
+.table {
+  margin: 0 20px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 13px;
+  font-weight: lighter;
+}
+
+.cell {
+  width: 100%;
+  height: 60px;
+  border-top: 1px solid black;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+}
+
+.cell .user {
+  width: 40%;
+  font-size: 14px;
+  text-align: left;
+}
+
+.cell .user span {
+  border-radius: 50%;
+  margin-right: 15px;
+  border: 1px solid black;
+  width: 25px;
+  height: 25px;
+  display: inline-block;
+  font-size: 12px;
+  text-align: center;
+  line-height: 25px;
 }
 
 </style>
