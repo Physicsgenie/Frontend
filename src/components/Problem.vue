@@ -313,7 +313,7 @@
           this.$store.commit('setProcessing', true);
 
           // Wolfram URL
-          const wolframURL = "https://www.wolframcloud.com/obj/7e5778ae-bde5-4a4c-b1a4-06dd7da21b1f";
+          const wolframURL = "https://www.wolframcloud.com/obj/cf8ac212-d924-4634-98fc-9f21673f629f";
 
           // Encoded Mathematica request
           const request = encodeURI(wolframURL + "?studentAnswer=" + self.currAnswer + "&correctAnswer=" + self.problem.answer + "&error=" + self.problem.error + "&mustMatch=" + (self.problem.mustMatch ? "true" : "false"));
