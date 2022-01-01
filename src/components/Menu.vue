@@ -18,6 +18,14 @@
           <div class = "text">Play</div>
         </router-link>
 
+        <!-- Leaderboard -->
+        <router-link to = "/leaderboard" class = "router-link">
+          <div class = "img leaderboard">
+            <i class = "fa fa-star" aria-hidden = "true"></i>
+          </div>
+          <div class = "text">Leaderboard</div>
+        </router-link>
+
         <!-- Review -->
         <!--<router-link to = "/review" class = "router-link">-->
           <!--<div class = "img review">-->
