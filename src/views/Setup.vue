@@ -88,7 +88,7 @@
 // Imports
 import Menu from "../components/Menu";
 import User from "../components/User";
-import vSelect from 'vue-select'
+import vSelect from 'vue-select';
 import 'vue-select/dist/vue-select.css';
 import axios from 'axios';
 
