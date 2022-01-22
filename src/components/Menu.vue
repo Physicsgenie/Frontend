@@ -19,12 +19,12 @@
         </router-link>
 
         <!-- Review -->
-<!--        <router-link to = "/review" class = "router-link">-->
-<!--          <div class = "img review">-->
-<!--            <i class = "fa fa-retweet" aria-hidden = "true"></i>-->
-<!--          </div>-->
-<!--          <div class = "text">Review</div>-->
-<!--        </router-link>-->
+        <router-link to = "/review" class = "router-link">
+          <div class = "img review">
+            <i class = "fa fa-retweet" aria-hidden = "true"></i>
+          </div>
+          <div class = "text">Review</div>
+        </router-link>
 
         <!-- Setup -->
         <router-link to = "/setup" class = "router-link">
