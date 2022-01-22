@@ -132,7 +132,6 @@ const actions = {
   },
   async GetProblemMetadata({commit}) {
     let response = await axios.get('wp-json/physics_genie/submit-data');
-    console.log(JSON.parse(response.data));
     commit('setProblemMetaData', JSON.parse(response.data));
   },
   async GetCurrProblem({commit, getters}) {
@@ -165,7 +164,8 @@ const actions = {
         mainFocus: data.main_focus,
         otherFoci: data.other_foci,
         source: source,
-        problemNumber: data.number_in_source
+        problemNumber: data.number_in_source,
+        problemErrors: data.problem_errors
       });
     }
   },
@@ -221,7 +221,6 @@ const actions = {
   async GetSubmittedProblems({commit, getters}) {
     await axios.get('wp-json/physics_genie/contributor-problems', {headers: {'Authorization': 'Bearer ' + getters.Token}}).then((response) => {
       let problems = JSON.parse(response.data);
-      console.log(problems);
       for (let i = 0; i < problems.length; i++) {
         let problemTextShortened = problems[i].problem_text.replace(/\\\\/g, "\\").replace(/\\"/g, "'");
 
@@ -234,13 +233,34 @@ const actions = {
           problemTextShortened += " ...";
         }
 
-        problems[i].problemTextShortened = problemTextShortened;
-
-        problems[i].sourceName = null;
+        let sourceName = null;
 
         if (getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === problems[i].source}).length > 0) {
-          problems[i].sourceName = getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === problems[i].source})[0].source;
+          sourceName = getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === problems[i].source})[0].source;
         }
+
+        problems[i] = {
+          problemID: problems[i].problem_id,
+          problemText: problems[i].problem_text.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+          problemTextShortened: problemTextShortened,
+          diagram: (problems[i].diagram === null) ? null : problems[i].diagram.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+          answer: problems[i].answer.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+          mustMatch: problems[i].must_match === "1",
+          error: problems[i].error,
+          solution: problems[i].solution.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+          solutionDiagram: (problems[i].solution_diagram === null) ? null : problems[i].solution_diagram.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+          hintOne: problems[i].hint_one.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+          hintTwo: (problems[i].hint_two === null) ? null : problems[i].hint_two.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+          difficulty: problems[i].difficulty,
+          topic: problems[i].topic,
+          mainFocus: problems[i].main_focus,
+          otherFoci: problems[i].other_foci,
+          source: problems[i].source,
+          sourceName: sourceName,
+          problemNumber: problems[i].number_in_source,
+          calculus: problems[i].calculus,
+          problemErrors: problems[i].problem_errors
+        };
       }
       commit('setSubmittedProblems', problems)
     });
@@ -256,8 +276,7 @@ const actions = {
       });
     }
 
-
-    await axios.post("wp-json/physics_genie/submit-problem", {
+    await axios.post("wp-json/physics_genie/submit-problem", JSON.stringify({
       problem_text: getters.CurrSubmission.problemText,
       diagram: (getters.CurrSubmission.diagramType === "file" ? getters.CurrSubmission.diagramFile.text : (getters.CurrSubmission.diagramType === "code" ? getters.CurrSubmission.diagram : "")),
       answer: getters.CurrSubmission.answer,
@@ -273,8 +292,8 @@ const actions = {
       calculus: getters.CurrSubmission.calculus,
       topic: getters.CurrSubmission.topic,
       main_focus: getters.CurrSubmission.mainFocus,
-      other_foci: getters.CurrSubmission.otherFoci.join("")
-    }, {headers: {'Authorization': 'Bearer ' + getters.Token}}).then(() => {
+      other_foci: getters.CurrSubmission.otherFoci
+    }), {'Content-Type': 'application/json', headers: {'Authorization': 'Bearer ' + getters.Token}}).then(() => {
       commit('setCurrSubmission', {
         problemID: null,
         problemText: "",
@@ -305,8 +324,14 @@ const actions = {
     });
   },
   async EditProblem({commit, getters}) {
+    // Getting list of user-reported errors that were addressed and that were marked as "Technical Error" and putting problem_error_ids in errorsAddressed 2d array
+    let errorsAddressed = [];
+    for (let i = 0; i < getters.CurrSubmissionEdit.problemErrors.length; i++) {
+      let error = getters.CurrSubmissionEdit.problemErrors[i];
+      errorsAddressed.push([error.problem_error_id, error.addressedState]);
+    }
 
-    await axios.put("wp-json/physics_genie/edit-problem", {
+    await axios.put("wp-json/physics_genie/edit-problem", JSON.stringify({
       problem_id: getters.CurrSubmissionEdit.problemID,
       problem_text: getters.CurrSubmissionEdit.problemText,
       diagram: (getters.CurrSubmissionEdit.diagramType === "file" ? getters.CurrSubmissionEdit.diagramFile.text : (getters.CurrSubmissionEdit.diagramType === "code" ? getters.CurrSubmissionEdit.diagram : "")),
@@ -323,8 +348,9 @@ const actions = {
       calculus: getters.CurrSubmissionEdit.calculus,
       topic: getters.CurrSubmissionEdit.topic,
       main_focus: getters.CurrSubmissionEdit.mainFocus,
-      other_foci: getters.CurrSubmissionEdit.otherFoci.join("")
-    }, {headers: {'Authorization': 'Bearer ' + getters.Token}}).then(() => {
+      other_foci: getters.CurrSubmissionEdit.otherFoci,
+      errors_addressed: errorsAddressed
+    }), {'Content-Type': 'application/json', headers: {'Authorization': 'Bearer ' + getters.Token}}).then(() => {
       commit('setCurrSubmissionEdit', {
         problemID: null,
         problemText: "",
@@ -350,19 +376,20 @@ const actions = {
         sourceOther: "",
         problemNumber: "",
         difficulty: null,
-        calculus: "None"
+        calculus: "None",
+        problemErrors: []
       });
     });
   },
   async SubmitAttempt({getters}, result) {
-    await axios.post("wp-json/physics_genie/submit-attempt", {
+    await axios.post("wp-json/physics_genie/submit-attempt", JSON.stringify({
       problem_id: getters.CurrProblem.problemID,
       num_attempts: getters.PastAnswers.length,
       correct: result === "correct" ? "true" : "false",
       topic: getters.CurrProblem.topic,
       focus: getters.CurrProblem.mainFocus,
       difficulty: getters.CurrProblem.difficulty,
-    },  {headers: {'Authorization': 'Bearer ' + getters.Token}});
+    }), {'Content-Type': 'application/json', headers: {'Authorization': 'Bearer ' + getters.Token}});
   }
 };
 const mutations = {

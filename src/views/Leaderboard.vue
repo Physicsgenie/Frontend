@@ -135,12 +135,16 @@ export default {
         return this.$store.getters.ProblemMetaData;
       }
     },
+
+    // leaderboardDataFiltered, leaderboard data with users with no xp (or problems submitted) filtered out
     leaderboardDataFiltered: {
       get() {
         let self = this;
         return this.leaderboardData.slice(0, this.displayNumber).filter(function(entry) {return self.type === 3 ? entry.submitted > 0 : entry.xp > 0});
       }
     },
+
+    // possibleFocuses, focuses that correspond to the current topic
     possibleFocuses: {
       get() {
         let self = this;

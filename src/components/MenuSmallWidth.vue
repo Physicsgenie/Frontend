@@ -42,10 +42,22 @@
         <div class = "text">Play</div>
       </div>
 
+      <!-- Review button -->
+<!--      <div class = "link-button" v-on:click = "navigate('leaderboard')">-->
+<!--        <i class = "fa fa-star"></i>-->
+<!--        <div class = "text">Review</div>-->
+<!--      </div>-->
+
       <!-- Setup button -->
       <div class = "link-button" v-on:click = "navigate('setup')">
         <i class = "fa fa-sliders"></i>
         <div class = "text">Setup</div>
+      </div>
+
+      <!-- Leaderboard button -->
+      <div class = "link-button" v-on:click = "navigate('leaderboard')">
+        <i class = "fa fa-star"></i>
+        <div class = "text">Leaderboard</div>
       </div>
 
       <!-- Submit button -->

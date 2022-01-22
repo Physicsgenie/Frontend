@@ -38,7 +38,6 @@
         this.$store.dispatch('GetUserMetadata');
         this.$store.dispatch('GetUserInfo');
         this.$store.dispatch('GetUserStats');
-        this.$store.dispatch('GetCurrProblem');
         this.$store.dispatch('GetSubmittedProblems');
       }
     },
