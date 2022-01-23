@@ -338,16 +338,16 @@ export default {
         this.$store.commit('setProcessing', true);
 
         // Wolfram URL
-        const wolframURL = "https://www.wolframcloud.com/obj/5920341f-cfee-4a37-a824-01aa6d105b30";
+        const wolframURL = "https://www.wolframcloud.com/obj/cf8ac212-d924-4634-98fc-9f21673f629f";
 
         // Encoded Mathematica request
         const request = encodeURI(wolframURL + "?studentAnswer=" + self.currAnswer + "&correctAnswer=" + self.problem.answer + "&error=" + self.problem.error + "&mustMatch=" + (self.problem.mustMatch ? "true" : "false"));
 
         // API POST request to /external-request with Mathematica request string as URL
-        axios.post("wp-json/physics_genie/external-request", {
+        axios.post("wp-json/physics_genie/external-request", JSON.stringify({
           method: "GET",
-          url: request,
-        }, {withCredentials: false}).then((response) => {
+          url: request
+        }), {withCredentials: true, "Content-Type": "application/json", headers: {'Authorization': 'Bearer ' + self.$store.getters.Token}}).then((response) => {
           // If response is "True" run correct function, otherwise run incorrect function
           axios.post("wp-json/physics_genie/submit-attempt", JSON.stringify({problem_id: self.problem.problemID, student_answer: self.currAnswer, correct: response.data === "True"}), {headers: {"Content-Type": "application/json", 'Authorization': 'Bearer ' + self.$store.getters.Token}}).then((res) => {
             if (JSON.parse(res.data).correct) {
