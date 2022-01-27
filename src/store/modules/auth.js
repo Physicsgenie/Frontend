@@ -16,8 +16,9 @@ const getters = {
 const actions = {
   async Register({dispatch}, form) {
     let response = await axios.post('wp-json/physics_genie/register', form);
-    if (response.data.length > 0) {
-      throw response.data[0];
+    let data = JSON.parse(response.data);
+    if (data.length > 0) {
+      throw data[0];
     } else {
       let UserForm = new FormData();
       UserForm.append('username', form.username);
@@ -34,19 +35,19 @@ const actions = {
     dispatch('GetCurrProblem', {root: true});
     dispatch('GetSubmittedProblems', {root: true});
   },
-  async PasswordReset({_}, email) {
-    await axios.post('wp-json/physics_genie/password-reset?email=' + email);
+  async PasswordReset({}, email) {
+    await axios.post('wp-json/physics_genie/password-reset', JSON.stringify({email: email}), {withCredentials: false, headers: {"Content-Type": "application/json"}});
   },
   async GetUserMetadata({commit, getters}) {
     let response = await axios.get('wp-json/physics_genie/user-metadata', {headers: {'Authorization': 'Bearer ' + getters.Token}});
-    commit('setUserMetadata', response.data);
+    commit('setUserMetadata', JSON.parse(response.data));
   },
   async LogOut({commit}){
     let user = null;
     commit('logOut', user);
   },
   async SetUserName({commit, getters}, name) {
-    await axios.put('wp-json/physics_genie/user-name', {name: name}, {headers: {'Authorization': 'Bearer ' + getters.Token}});
+    await axios.put('wp-json/physics_genie/user-name', JSON.stringify({name: name}), {headers: {"Content-Type": "application/json", 'Authorization': 'Bearer ' + getters.Token}});
     commit('setUserName', name);
   }
 };

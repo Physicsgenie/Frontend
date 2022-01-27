@@ -19,12 +19,12 @@
         </router-link>
 
         <!-- Review -->
-        <!--<router-link to = "/review" class = "router-link">-->
-          <!--<div class = "img review">-->
-            <!--<i class = "fa fa-retweet" aria-hidden = "true"></i>-->
-          <!--</div>-->
-          <!--<div class = "text">Review</div>-->
-        <!--</router-link>-->
+<!--        <router-link to = "/review" class = "router-link">-->
+<!--          <div class = "img review">-->
+<!--            <i class = "fa fa-retweet" aria-hidden = "true"></i>-->
+<!--          </div>-->
+<!--          <div class = "text">Review</div>-->
+<!--        </router-link>-->
 
         <!-- Setup -->
         <router-link to = "/setup" class = "router-link">
@@ -32,6 +32,14 @@
             <i class = "fa fa-sliders" aria-hidden = "true"></i>
           </div>
           <div class = "text">Setup</div>
+        </router-link>
+
+        <!-- Leaderboard -->
+        <router-link to = "/leaderboard" class = "router-link">
+          <div class = "img leaderboard">
+            <i class = "fa fa-star" aria-hidden = "true"></i>
+          </div>
+          <div class = "text">Leaderboard</div>
         </router-link>
 
         <!-- Submit -->
@@ -120,7 +128,7 @@
     display: flex;
     margin-top: 30px;
     flex-direction: column;
-    height: 408px;
+    height: 415px;
     justify-content: space-around;
     align-items: flex-start;
   }

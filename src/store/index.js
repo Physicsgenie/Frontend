@@ -7,10 +7,7 @@ import store from './modules/store';
 // Load Vuex
 Vue.use(Vuex);
 
-
-// FUNTIONS
-
-// FUNCTIONS
+// Functions
 const Functions = store => {
   store.functions = {
     testAlgebraic: function(expression) {

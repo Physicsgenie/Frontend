@@ -3,17 +3,20 @@
     <!-- Report error -->
     <ReportError v-if = "reportError" v-bind:problemID = "problem.problemID" v-on:close = "reportErrorClose" style = "z-index: 500;" />
 
+    <!-- Errors reported -->
+    <div v-if = "problem.problemErrors !== undefined && problem.problemErrors.length > 0" class = "reported-errors"><i class = "fa fa-exclamation-circle"></i><div class = "num">{{ problem.problemErrors.length }}</div><div>error{{problem.problemErrors.length === 1 ? " has" : "s have"}} been reported on this problem</div></div>
+
     <!-- Progress bars -->
     <div id = "progress-bars">
       <!-- Topic progress bar (only shows if window width is greater than 850px -->
       <div class = "topic" v-if = "$store.getters.WindowWidth > 850">
-        <h4>{{ problem.topicName }}</h4>
+        <h4>{{ problem.topic }}</h4>
         <ProgressBar class = "progress-bar" v-bind:xp = "topicStatsXP" v-bind:add = "add" />
       </div>
 
       <!-- Focus progress bar -->
       <div class = "focus">
-        <h4>{{ problem.mainFocusName }}</h4>
+        <h4>{{ problem.mainFocus }}</h4>
         <ProgressBar class = "progress-bar" v-bind:xp = "focusStatsXP" v-bind:add = "add" />
       </div>
     </div>
@@ -36,7 +39,7 @@
         </div>
 
         <!-- Main focus -->
-        <div class = "main-focus"><span class = "topic">{{ problem.topicName }}</span>><span class = "focus">{{ problem.mainFocusName }}</span></div>
+        <div class = "main-focus"><span class = "topic">{{ problem.topic }}</span>><span class = "focus">{{ problem.mainFocus }}</span></div>
 
         <!-- Other foci -->
         <div class = "secondary-focus" v-if = "problem.otherFoci.length > 0" v-bind:title = "otherFociList">{{ otherFociList.length > 40 ? otherFociList.substring(0, 40) + "..." : otherFociList }}</div>
@@ -111,337 +114,362 @@
     </div>
 
     <!-- Source -->
-    <div class = "source">Source: {{ problem.source === null ? "[[COULD NOT BE FOUND]]" : (problem.source.source + " (" + problem.source.author + ") " + (problem.problemNumber !== "" ? "#" : "") + problem.problemNumber) }}</div>
+    <div class = "source" v-if = "problem.source != null">Source: {{ problem.source.source + " (" + problem.source.author + ") " + (problem.problemNumber !== "" ? "#" : "") + problem.problemNumber }}</div>
+    <div class = "source" v-else>Source: [[COULD NOT BE FOUND]]</div>
   </div>
 </template>
 
 <script>
 
-  // Imports
-  import axios from 'axios';
-  import {VueMathjax} from 'vue-mathjax'
-  import { mapGetters } from "vuex";
-  import ProgressBar from './ProgressBar';
-  import ReportError from './ReportError';
+// Imports
+import axios from 'axios';
+import {VueMathjax} from 'vue-mathjax'
+import { mapGetters } from "vuex";
+import ProgressBar from './ProgressBar';
+import ReportError from './ReportError';
 
-  export default {
-    name: "Problem",
-    components: {
-      'vue-mathjax': VueMathjax,
-      ProgressBar,
-      ReportError
+export default {
+  name: "Problem",
+  components: {
+    'vue-mathjax': VueMathjax,
+    ProgressBar,
+    ReportError
+  },
+  props: {
+    problem: {
+      type: Object
     },
-    props: {
-      problem: {
-        type: Object
-      },
-      official: {
-        type: Boolean
-      }
-    },
-    data() {
-      return {
-        ordinalNumbers: ["First", "Second", "Third", "Fourth", "Fifth"],
-        pastAnswersUnofficial: [],
-        currAnswerUnofficial: "",
-        resultUnofficial: "",
-        wrong: false,
-        mathInputFocusStyle: null,
-        reportError: false,
-        processingResult: ""
-      }
-    },
-    computed: {
-      ...mapGetters({
-        userStats: 'UserStats',
-        submitData: 'ProblemMetaData'
-      }),
-      // pastAnswers, map to "PastAnswers" from store if official (get and set), otherwise return unofficial past answers from component data (get and set)
-      pastAnswers: {
-        get() {
-          if (this.official) {
-            return this.$store.getters.PastAnswers;
-          } else {
-            return this.pastAnswersUnofficial;
-          }
-        },
-        set(value) {
-          if (this.official) {
-            this.$store.commit('setPastAnswers', value);
-          } else {
-            this.pastAnswersUnofficial = value;
-          }
-        }
-      },
-
-      // result, map to "result" from store if official (get and set), otherwise return unofficial result from component data (get and set)
-      result: {
-        get() {
-          if (this.official) {
-            return this.$store.getters.Result;
-          } else {
-            return this.resultUnofficial;
-          }
-        },
-        set(value) {
-          if (this.official) {
-            this.$store.commit('setResult', value);
-          } else {
-            this.resultUnofficial = value;
-          }
-        }
-      },
-
-      // currAnswer, map to "CurrAnswer" from store if official (get and set), otherwise return unofficial curr answer from component data (get and set)
-      currAnswer: {
-        get() {
-          if (this.official) {
-            return this.$store.getters.CurrAnswer;
-          } else {
-            return this.currAnswerUnofficial;
-          }
-        },
-        set(value) {
-          if (this.official) {
-            this.$store.commit('setCurrAnswer', value);
-          } else {
-            this.currAnswerUnofficial = value;
-          }
-        }
-      },
-
-      // otherFociList, creates "Also Includes: ..." string from otherFoci list
-      otherFociList: function() {
-        // Returns null if no other foci
-        if (this.problem.otherFoci.length === 0) {
-          return null;
-        }
-
-        let string = "Also Includes: ";
-        // Iterates through each focus and concatenates to return string, with filler words depending on where it is in the array
-        for (let i = 0; i < this.problem.otherFoci.length; i++) {
-          string += this.problem.otherFoci[i];
-          if (i === 0 && this.problem.otherFoci.length === 2) {
-            string += " and ";
-          } else if (i < this.problem.otherFoci.length - 2 && this.problem.otherFoci.length > 2) {
-            string += ", ";
-          } else if (i === this.problem.otherFoci.length - 2) {
-            string += ", and ";
-          }
-        }
-        return string;
-      },
-
-      // algebraicAnswer, returns boolean testing whether or not the problem's answer is algebraic or not
-      algebraicAnswer: function() {
-        // Call testAlgebraic from store function to determine if answer is algebraic
-        return this.$store.functions.testAlgebraic(this.problem.answer);
-      },
-
-      // focusStats, returns user's current stats for problem's focus
-      focusStats: function() {
-        let self = this;
-        return this.userStats.topics.filter(function(topic) {return topic.topicId === self.problem.topic})[0].foci.filter(function(focus) {return focus.focusId === self.problem.mainFocus})[0];
-      },
-
-      // topicStatsXP, calculates xp that should be shown on topic progress bar
-      topicStatsXP: function() {
-        let self = this;
-
-        // Gets user's current stats for problem's topic
-        let xp = this.userStats.topics.filter(function(topic) {return topic.topicId === self.problem.topic})[0].xp;
-
-        // Logic to calculate what new xp will be when processing result to ensure progress bar updates right when result is shown (rather than being delayed to when user stats are updated)
-        if (this.processingResult === "correct" && this.focusStats.streak > 0 && (this.focusStats.streak + 1) % 5 === 0) {
-          return xp + Math.floor(1.2*(this.focusStats.xp+this.problem.difficulty*(4-this.pastAnswers.length))) - this.focusStats.xp;
-        } else if (this.processingResult === "correct") {
-          return xp + this.problem.difficulty*(4-this.pastAnswers.length);
-        } else if (this.processingResult === "incorrect" && this.focusStats.streak < 0 && (this.focusStats.streak - 1) % 3 === 0) {
-          return xp - this.focusStats.xp + parseInt(0.8*this.focusStats.xp);
+    official: {
+      type: Boolean
+    }
+  },
+  data() {
+    return {
+      ordinalNumbers: ["First", "Second", "Third", "Fourth", "Fifth"],
+      pastAnswersUnofficial: [],
+      currAnswerUnofficial: "",
+      resultUnofficial: "",
+      wrong: false,
+      mathInputFocusStyle: null,
+      reportError: false,
+      processingResult: ""
+    }
+  },
+  computed: {
+    ...mapGetters({
+      userStats: 'UserStats',
+      submitData: 'ProblemMetaData'
+    }),
+    // pastAnswers, map to "PastAnswers" from store if official (get and set), otherwise return unofficial past answers from component data (get and set)
+    pastAnswers: {
+      get() {
+        if (this.official) {
+          return this.$store.getters.PastAnswers;
         } else {
-          return xp;
+          return this.pastAnswersUnofficial;
         }
       },
-
-      // focusStatsXP, calculates xp that should be shown on focus progress bar
-      focusStatsXP: function() {
-        // Logic to calculate what new xp will be when processing result to ensure progress bar updates right when result is shown (rather than being delayed to when user stats are updated)
-        if (this.processingResult === "correct" && this.focusStats.streak > 0 && (this.focusStats.streak + 1) % 5 === 0) {
-          return this.focusStats.xp + Math.floor(1.2*(this.focusStats.xp+this.problem.difficulty*(4-this.pastAnswers.length)));
-        } else if (this.processingResult === "correct") {
-          return this.focusStats.xp + this.problem.difficulty*(4-this.pastAnswers.length);
-        } else if (this.processingResult === "incorrect" && this.focusStats.streak < 0 && (this.focusStats.streak - 1) % 3 === 0) {
-          return parseInt(0.8*this.focusStats.xp);
+      set(value) {
+        if (this.official) {
+          this.$store.commit('setPastAnswers', value);
         } else {
-          return this.focusStats.xp;
-        }
-      },
-
-      // add, calculates the xp that will be added to both progress bars if correct
-      add: function() {
-        if (this.result !== "") {
-          // Add should be zero if result is showing
-          return 0;
-        } else if (this.focusStats.streak > 0 && (this.focusStats.streak + 1) % 5 === 0) {
-          return Math.floor(1.2*(this.focusStats.xp+this.problem.difficulty*(3-this.pastAnswers.length))) - this.focusStats.xp;
-        } else {
-          return this.problem.difficulty*(3-this.pastAnswers.length);
+          this.pastAnswersUnofficial = value;
         }
       }
     },
-    methods: {
-      // reportErrorPressed, shows ReportError popup
-      reportErrorPressed: function() {
-        this.reportError = true;
-      },
 
-      // reportErrorClose, closes ReportError popup
-      reportErrorClose: function() {
-        this.reportError = false;
-      },
-
-      // onSubmit, submits student answer
-      onSubmit: function() {
-        let self = this;
-
-        // Ensures student answer is not blank and has not already been tried
-        if (this.currAnswer === "") {
-          this.$store.dispatch('Confirmation', "Please enter an answer before submitting");
-        } else if (this.pastAnswers.includes(this.currAnswer)) {
-          this.$store.dispatch('Confirmation', "You cannot enter an answer that you have already tried");
+    // result, map to "result" from store if official (get and set), otherwise return unofficial result from component data (get and set)
+    result: {
+      get() {
+        if (this.official) {
+          return this.$store.getters.Result;
         } else {
-          this.$store.commit('setProcessing', true);
+          return this.resultUnofficial;
+        }
+      },
+      set(value) {
+        if (this.official) {
+          this.$store.commit('setResult', value);
+        } else {
+          this.resultUnofficial = value;
+        }
+      }
+    },
 
-          // Wolfram URL
-          const wolframURL = "https://www.wolframcloud.com/obj/cf8ac212-d924-4634-98fc-9f21673f629f";
+    // currAnswer, map to "CurrAnswer" from store if official (get and set), otherwise return unofficial curr answer from component data (get and set)
+    currAnswer: {
+      get() {
+        if (this.official) {
+          return this.$store.getters.CurrAnswer;
+        } else {
+          return this.currAnswerUnofficial;
+        }
+      },
+      set(value) {
+        if (this.official) {
+          this.$store.commit('setCurrAnswer', value);
+        } else {
+          this.currAnswerUnofficial = value;
+        }
+      }
+    },
 
-          // Encoded Mathematica request
-          const request = encodeURI(wolframURL + "?studentAnswer=" + self.currAnswer + "&correctAnswer=" + self.problem.answer + "&error=" + self.problem.error + "&mustMatch=" + (self.problem.mustMatch ? "true" : "false"));
+    // otherFociList, creates "Also Includes: ..." string from otherFoci list
+    otherFociList: function() {
+      // Returns null if no other foci
+      if (this.problem.otherFoci.length === 0) {
+        return null;
+      }
 
-          // API POST request to /external-request with Mathematica reuquest string as URL
-          axios.post("wp-json/physics_genie/external-request", {
-            method: "GET",
-            url: request
-          }).then((response) => {
-            // If response is "True" run correct function, otherwise run incorrect function
-            if (response.data === "True") {
+      let string = "Also Includes: ";
+      // Iterates through each focus and concatenates to return string, with filler words depending on where it is in the array
+      for (let i = 0; i < this.problem.otherFoci.length; i++) {
+        string += this.problem.otherFoci[i];
+        if (i === 0 && this.problem.otherFoci.length === 2) {
+          string += " and ";
+        } else if (i < this.problem.otherFoci.length - 2 && this.problem.otherFoci.length > 2) {
+          string += ", ";
+        } else if (i === this.problem.otherFoci.length - 2) {
+          string += ", and ";
+        }
+      }
+      return string;
+    },
+
+    // algebraicAnswer, returns boolean testing whether or not the problem's answer is algebraic or not
+    algebraicAnswer: function() {
+      // Call testAlgebraic from store function to determine if answer is algebraic
+      return this.$store.functions.testAlgebraic(this.problem.answer);
+    },
+
+    // focusStats, returns user's current stats for problem's focus
+    focusStats: function() {
+      let self = this;
+
+      // Return 0s if topic does not match any user stats topics
+      let topicStats = this.userStats.topic_stats.filter(function(topic) {return topic.topic === self.problem.topic});
+      if (topicStats.length === 0) {
+        return {xp: 0, streak: 0};
+      }
+
+      // Return 0s if focus does not match any user stats focuses
+      let focusStats = topicStats[0].focus_stats.filter(function(focus) {return focus.focus === self.problem.mainFocus});
+      if (focusStats.length === 0) {
+        return {xp: 0, streak: 0};
+      }
+
+      // Normal return if no errors
+      return focusStats[0];
+    },
+
+    // topicStatsXP, calculates xp that should be shown on topic progress bar
+    topicStatsXP: function() {
+      let self = this;
+
+      // Gets user's current stats for problem's topic
+      let xp = this.userStats.topic_stats.filter(function(topic) {return topic.topic === self.problem.topic});
+
+      // Return 0 if topic does not match any user stats topics
+      if (xp.length === 0) {
+        return 0;
+      }
+
+      xp = xp[0].xp;
+
+      // Logic to calculate what new xp will be when processing result to ensure progress bar updates right when result is shown (rather than being delayed to when user stats are updated)
+      if (this.processingResult === "correct" && this.focusStats.streak > 0 && (this.focusStats.streak + 1) % 5 === 0) {
+        return xp + Math.floor(1.2*(this.focusStats.xp+this.problem.difficulty*(4-this.pastAnswers.length))) - this.focusStats.xp;
+      } else if (this.processingResult === "correct") {
+        return xp + this.problem.difficulty*(4-this.pastAnswers.length);
+      } else if (this.processingResult === "incorrect" && this.focusStats.streak < 0 && (this.focusStats.streak - 1) % 3 === 0) {
+        return xp - this.focusStats.xp + parseInt(0.8*this.focusStats.xp);
+      } else {
+        return xp;
+      }
+    },
+
+    // focusStatsXP, calculates xp that should be shown on focus progress bar
+    focusStatsXP: function() {
+      // Logic to calculate what new xp will be when processing result to ensure progress bar updates right when result is shown (rather than being delayed to when user stats are updated)
+      if (this.processingResult === "correct" && this.focusStats.streak > 0 && (this.focusStats.streak + 1) % 5 === 0) {
+        return this.focusStats.xp + Math.floor(1.2*(this.focusStats.xp+this.problem.difficulty*(4-this.pastAnswers.length)));
+      } else if (this.processingResult === "correct") {
+        return this.focusStats.xp + this.problem.difficulty*(4-this.pastAnswers.length);
+      } else if (this.processingResult === "incorrect" && this.focusStats.streak < 0 && (this.focusStats.streak - 1) % 3 === 0) {
+        return parseInt(0.8*this.focusStats.xp);
+      } else {
+        return this.focusStats.xp;
+      }
+    },
+
+    // add, calculates the xp that will be added to both progress bars if correct
+    add: function() {
+      if (this.result !== "" || !this.official) {
+        // Add should be zero if result is showing
+        return 0;
+      } else if (this.focusStats.streak > 0 && (this.focusStats.streak + 1) % 5 === 0) {
+        return Math.floor(1.2*(this.focusStats.xp+this.problem.difficulty*(3-this.pastAnswers.length))) - this.focusStats.xp;
+      } else {
+        return this.problem.difficulty*(3-this.pastAnswers.length);
+      }
+    }
+  },
+  methods: {
+    // reportErrorPressed, shows ReportError popup
+    reportErrorPressed: function() {
+      this.reportError = true;
+    },
+
+    // reportErrorClose, closes ReportError popup
+    reportErrorClose: function() {
+      this.reportError = false;
+    },
+
+    // onSubmit, submits student answer
+    onSubmit: function() {
+      let self = this;
+
+      // Ensures student answer is not blank and has not already been tried
+      if (this.currAnswer === "") {
+        this.$store.dispatch('Confirmation', "Please enter an answer before submitting");
+      } else if (this.pastAnswers.includes(this.currAnswer)) {
+        this.$store.dispatch('Confirmation', "You cannot enter an answer that you have already tried");
+      } else {
+        this.$store.commit('setProcessing', true);
+
+        // Wolfram URL
+        const wolframURL = "https://www.wolframcloud.com/obj/cf8ac212-d924-4634-98fc-9f21673f629f";
+
+        // Encoded Mathematica request
+        const request = encodeURI(wolframURL + "?studentAnswer=" + self.currAnswer + "&correctAnswer=" + self.problem.answer + "&error=" + self.problem.error + "&mustMatch=" + (self.problem.mustMatch ? "true" : "false"));
+
+        // API POST request to /external-request with Mathematica request string as URL
+        axios.post("wp-json/physics_genie/external-request", JSON.stringify({
+          method: "GET",
+          url: request
+        }), {withCredentials: true, "Content-Type": "application/json", headers: {'Authorization': 'Bearer ' + self.$store.getters.Token}}).then((response) => {
+          // If response is "True" run correct function, otherwise run incorrect function
+          axios.post("wp-json/physics_genie/submit-attempt", JSON.stringify({problem_id: self.problem.problemID, student_answer: self.currAnswer, correct: response.data === "True"}), {headers: {"Content-Type": "application/json", 'Authorization': 'Bearer ' + self.$store.getters.Token}}).then((res) => {
+            if (JSON.parse(res.data).correct) {
               self.correct();
             } else {
               self.incorrect();
             }
           });
-        }
-      },
+        });
+      }
+    },
 
-      // async correct, runs when student's answer is correct
-      correct: async function() {
-        // Add correct answer to previous answers list
-        this.pastAnswers.push(this.currAnswer);
+    // async correct, runs when student's answer is correct
+    correct: async function() {
+      // Add correct answer to previous answers list
+      this.pastAnswers.push(this.currAnswer);
 
-        // Set processingResult for xp delay fix
-        this.processingResult = "correct";
+      // Set processingResult for xp delay fix
+      this.processingResult = "correct";
 
-        // Set result
-        this.result = "correct";
+      // Set result
+      this.result = "correct";
 
-        // Reset currAnswer to blank string
-        this.currAnswer = "";
+      // Reset currAnswer to blank string
+      this.currAnswer = "";
 
-        this.$store.commit('setProcessing', false);
-        // If problem is an official attempt then submit the attempt and update user stats
-        if (this.official) {
-          await this.$store.dispatch('SubmitAttempt', "correct");
-          await this.$store.dispatch('GetUserStats');
-        }
+      this.$store.commit('setProcessing', false);
+      // If problem is an official attempt then submit the attempt and update user stats
+      if (this.official) {
+        await this.$store.dispatch('SubmitAttempt', "correct");
+        await this.$store.dispatch('GetUserStats');
+      }
 
-        // Reset processingResult to blank string
-        this.processingResult = "";
-      },
+      // Reset processingResult to blank string
+      this.processingResult = "";
+    },
 
-      // async incorrect, runs when student's answer is incorrect
-      incorrect: async function() {
-        // Add incorrect answer to previous answers list
-        this.pastAnswers.push(this.currAnswer);
+    // async incorrect, runs when student's answer is incorrect
+    incorrect: async function() {
+      // Add incorrect answer to previous answers list
+      this.pastAnswers.push(this.currAnswer);
 
-        // Set currAnswer to blank string
-        this.currAnswer = "";
+      // Set currAnswer to blank string
+      this.currAnswer = "";
 
-        this.$store.commit('setProcessing', false);
-        // If third incorrect answer, then run incorrect result logic
-        if (this.pastAnswers.length === 3) {
-          // Set processingResult for xp delay fix
-          this.processingResult = "incorrect";
-
-          // Set result
-          this.result = "incorrect";
-
-          // If problem is an official attempt then submit the attempt and update user stats
-          if (this.official) {
-            await this.$store.dispatch('SubmitAttempt', "incorrect");
-            await this.$store.dispatch('GetUserStats');
-          }
-        }
-
-        // Reset processingResult to blank string
-        this.processingResult = "";
-      },
-
-      // async gaveUp, give up on current problem
-      gaveUp: async function() {
+      this.$store.commit('setProcessing', false);
+      // If third incorrect answer, then run incorrect result logic
+      if (this.pastAnswers.length === 3) {
         // Set processingResult for xp delay fix
         this.processingResult = "incorrect";
 
         // Set result
-        this.result = "gave up";
-
-        // Set currAnswer to blank string
-        this.currAnswer = "";
+        this.result = "incorrect";
 
         // If problem is an official attempt then submit the attempt and update user stats
         if (this.official) {
-          await this.$store.dispatch('SubmitAttempt', "gave up");
+          await this.$store.dispatch('SubmitAttempt', "incorrect");
           await this.$store.dispatch('GetUserStats');
         }
-
-        // Reset processingResult to blank string
-        this.processingResult = "";
-      },
-
-      // async skip, skip current problem and get next one
-      skip: async function() {
-        // If problem is an official attempt then get next problem
-        if (this.official) {
-          this.$store.commit('setProcessing', true);
-          // API PUT request /reset-curr-problem to ensure database deletes record of current problem
-          await axios.put("wp-json/physics_genie/reset-curr-problem", null, {headers: {'Authorization': 'Bearer ' + this.$store.getters.Token}});
-          await this.$store.dispatch('GetCurrProblem');
-          this.$store.commit('setProcessing', false);
-        }
-
-        // Reset previous answers
-        this.pastAnswers = [];
-
-        // Reset result
-        this.result = "";
-      },
-
-      // async next, get next problem
-      next: async function() {
-        // If problem is an official attempt then get next problem
-        if (this.official) {
-          this.$store.commit('setProcessing', true);
-          await this.$store.dispatch('GetCurrProblem');
-          this.$store.commit('setProcessing', false);
-        }
-
-        // Reset previous answers
-        this.pastAnswers = [];
-
-        // Reset result
-        this.result = "";
       }
+
+      // Reset processingResult to blank string
+      this.processingResult = "";
+    },
+
+    // async gaveUp, give up on current problem
+    gaveUp: async function() {
+      // Set processingResult for xp delay fix
+      this.processingResult = "incorrect";
+
+      // Set result
+      this.result = "gave up";
+
+      // Set currAnswer to blank string
+      this.currAnswer = "";
+
+      // If problem is an official attempt then submit the attempt and update user stats
+      if (this.official) {
+        await this.$store.dispatch('SubmitAttempt', "gave up");
+        await this.$store.dispatch('GetUserStats');
+      }
+
+      // Reset processingResult to blank string
+      this.processingResult = "";
+    },
+
+    // async skip, skip current problem and get next one
+    skip: async function() {
+      // If problem is an official attempt then get next problem
+      if (this.official) {
+        this.$store.commit('setProcessing', true);
+        // API PUT request /reset-curr-problem to ensure database deletes record of current problem
+        await axios.put("wp-json/physics_genie/reset-curr-problem", null, {headers: {'Authorization': 'Bearer ' + this.$store.getters.Token}});
+        await this.$store.dispatch('GetCurrProblem');
+        this.$store.commit('setProcessing', false);
+      }
+
+      // Reset previous answers
+      this.pastAnswers = [];
+
+      // Reset result
+      this.result = "";
+    },
+
+    // async next, get next problem
+    next: async function() {
+      // If problem is an official attempt then get next problem
+      if (this.official) {
+        this.$store.commit('setProcessing', true);
+        await this.$store.dispatch('GetCurrProblem');
+        this.$store.commit('setProcessing', false);
+      }
+
+      // Reset previous answers
+      this.pastAnswers = [];
+
+      // Reset result
+      this.result = "";
     }
   }
+}
+
 </script>
 
 <style scoped>
@@ -452,7 +480,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
+    position: relative;
   }
 
   .content {
@@ -466,6 +494,42 @@
     box-sizing: border-box;
     margin-top: 20px;
     font-family: 'Nunito', sans-serif;
+  }
+
+  /* Reported errors warning styling */
+  .reported-errors {
+    position: absolute;
+    padding: 5px;
+    z-index: 100;
+    left: 0;
+    top: -33px;
+    font-family: "Montserrat", sans-serif;
+    border-top: 1px solid black;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    height: 20px;
+  }
+
+  .reported-errors .fa {
+    margin-right: 6px;
+  }
+
+  .reported-errors div {
+    overflow: hidden;
+    display: block;
+  }
+
+  .reported-errors div:not(.num) {
+    font-size: 12px;
+    margin-left: 3px;
+    width: 0;
+    margin-top: 2px;
+    transition: width .3s ease;
+  }
+
+  .reported-errors:hover div:not(.num) {
+    width: 260px;
   }
 
   /* Progress bars styling */
@@ -580,6 +644,11 @@
     line-height: 30px;
     color: rgb(29, 34, 41);
     font-weight: lighter;
+  }
+
+  #diagram {
+    width: 100%;
+    overflow: auto;
   }
 
   .flex.problem .buttons {

@@ -5,6 +5,7 @@ import store from './store';
 import axios from 'axios';
 import * as MathLive from 'mathlive/dist/mathlive.min.mjs';
 import VueMathfield from 'mathlive/dist/vue-mathlive';
+
 Vue.use(VueMathfield, MathLive);
 
 axios.defaults.withCredentials = true;

@@ -91,18 +91,13 @@
 
         // API GET request to /problem with problemID (from route param) as param (and then set current problem based on response data)
         axios.get('wp-json/physics_genie/problem/' + this.$route.params.problem, {headers: {'Authorization': 'Bearer ' + this.$store.getters.Token}}).then((response) => {
+          // Parse JSON response
+          let data = JSON.parse(response.data);
+
           // If no response, set problem to null
           if (response.data === "") {
             self.problem = null;
           } else {
-            // Change other_foci character string into foci array of actual focus names (from ProblemMetaData)
-            let foci = [];
-            if (response.data.other_foci !== null) {
-              response.data.other_foci.split("").forEach(function(otherFocus) {
-                foci.push(self.$store.getters.ProblemMetaData.focuses.filter(function(focus) {return focus.focus === otherFocus})[0].name);
-              });
-            }
-
             // Change source from id to actual source name
             let source = null;
             if (self.$store.getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === response.data.source}).length > 0) {
@@ -111,24 +106,23 @@
 
             // Set problem values from GET request response data
             self.problem = {
-              problemID: response.data.problem_id,
-              problemText: response.data.problem_text.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
-              diagram: (response.data.diagram === null) ? null : response.data.diagram.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
-              answer: response.data.answer.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
-              mustMatch: response.data.must_match === "1",
-              error: response.data.error,
-              solution: response.data.solution.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
-              solutionDiagram: (response.data.solution_diagram === null) ? null : response.data.solution_diagram.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
-              hintOne: response.data.hint_one.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
-              hintTwo: (response.data.hint_two === null) ? null : response.data.hint_two.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
-              difficulty: response.data.difficulty,
-              topic: response.data.topic,
-              topicName: self.$store.getters.ProblemMetaData.topics.filter(function(topic) {return topic.topic === response.data.topic})[0].name,
-              mainFocus: response.data.main_focus,
-              mainFocusName: self.$store.getters.ProblemMetaData.focuses.filter(function(focus) {return focus.focus === response.data.main_focus})[0].name,
-              otherFoci: foci,
+              problemID: data.problem_id,
+              problemText: data.problem_text.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+              diagram: (data.diagram === null) ? null : data.diagram.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+              answer: data.answer.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+              mustMatch: data.must_match === "1",
+              error: data.error,
+              solution: data.solution.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+              solutionDiagram: (data.solution_diagram === null) ? null : data.solution_diagram.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+              hintOne: data.hint_one.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+              hintTwo: (data.hint_two === null) ? null : data.hint_two.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+              difficulty: data.difficulty,
+              topic: data.topic,
+              mainFocus: data.main_focus,
+              otherFoci: data.other_foci,
               source: source,
-              problemNumber: response.data.number_in_source
+              problemNumber: data.number_in_source,
+              problemErrors: data.problem_errors
             };
           }
         });
