@@ -172,7 +172,6 @@ export default {
       let self = this;
       self.processing = true;
       axios.post("wp-json/physics_genie/leaderboard", JSON.stringify({type: self.type === 2 ? self.streakType : self.types[self.type], time: self.range, topic: self.selectedTopic, focus: self.selectedFocus, difficulty: self.selectedDifficulty}), {"Content-Type": "application/json", headers: {'Authorization': 'Bearer ' + self.$store.getters.Token}}).then((response) => {
-        console.log("Leaderboard Response Data: ", JSON.parse(response.data));
         self.leaderboardData = JSON.parse(response.data);
         self.processing = false;
       });

@@ -225,7 +225,6 @@ const actions = {
   async GetPastProblems({commit, getters}) {
     await axios.get('wp-json/physics_genie/user-problems', {headers: {'Authorization': 'Bearer ' + getters.Token}}).then((response) => {
       let problems = JSON.parse(response.data);
-      console.log(JSON.parse(response.data));
       for (let i = 0; i < problems.length; i++) {
         let problemTextShortened = problems[i].problem_text.replace(/\\\\/g, "\\").replace(/\\"/g, "'");
 
@@ -239,10 +238,13 @@ const actions = {
         }
 
         let sourceName = null;
+        let source = null;
 
         if (getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === problems[i].source}).length > 0) {
-          sourceName = getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === problems[i].source})[0].source;
+          source = getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === problems[i].source})[0];
         }
+        
+        sourceName = source.source;
 
         problems[i] = {
           problemID: problems[i].problem_id,
@@ -260,7 +262,7 @@ const actions = {
           topic: problems[i].topic,
           mainFocus: problems[i].main_focus,
           otherFoci: problems[i].other_foci,
-          source: problems[i].source,
+          source: source,
           sourceName: sourceName,
           problemNumber: problems[i].number_in_source,
           calculus: problems[i].calculus,
