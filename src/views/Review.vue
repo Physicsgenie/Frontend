@@ -231,7 +231,6 @@ export default {
     // activateProblem (problem => problem to reactivate/deactivate), reactivate or deactivate problem according to its current activation state
     activateProblem: function(problem) {
       let self = this;
-      console.log(problem);
 
       self.$store.commit('setProcessing', true);
       if (problem.active) {

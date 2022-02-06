@@ -309,7 +309,6 @@ export default {
     add: function() {
       if (this.result !== "" || !this.official || this.problem.completed) {
         // Add should be zero if result is showing
-        console.log("Hello");
         return 0;
       } else if (this.focusStats.streak > 0 && (this.focusStats.streak + 1) % 5 === 0) {
         return Math.floor(1.2*(this.focusStats.xp+this.problem.difficulty*(3-this.pastAnswers.length))) - this.focusStats.xp;
