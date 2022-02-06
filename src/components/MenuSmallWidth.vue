@@ -43,10 +43,10 @@
       </div>
 
       <!-- Review button -->
-<!--      <div class = "link-button" v-on:click = "navigate('leaderboard')">-->
-<!--        <i class = "fa fa-star"></i>-->
-<!--        <div class = "text">Review</div>-->
-<!--      </div>-->
+      <div class = "link-button" v-on:click = "navigate('leaderboard')">
+        <i class = "fa fa-star"></i>
+        <div class = "text">Review</div>
+      </div>
 
       <!-- Setup button -->
       <div class = "link-button" v-on:click = "navigate('setup')">

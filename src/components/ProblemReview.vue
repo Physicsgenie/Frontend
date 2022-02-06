@@ -6,33 +6,23 @@
     <!-- Errors reported -->
     <div v-if = "problem.problemErrors !== undefined && problem.problemErrors.length > 0" class = "reported-errors"><i class = "fa fa-exclamation-circle"></i><div class = "num">{{ problem.problemErrors.length }}</div><div>error{{problem.problemErrors.length === 1 ? " has" : "s have"}} been reported on this problem</div></div>
 
-    <!-- Reattempt -->
-    <div v-if = "problem.completed" class = "reattempt"><div>This problem has been previously attempted</div><i class = "fa fa-retweet"></i></div>
-
     <!-- Progress bars -->
     <div id = "progress-bars">
       <!-- Topic progress bar (only shows if window width is greater than 850px -->
       <div class = "topic" v-if = "$store.getters.WindowWidth > 850">
         <h4>{{ problem.topic }}</h4>
-        <ProgressBar class = "progress-bar" v-bind:xp = "topicStatsXP" v-bind:add = "add" />
+        <ProgressBar class = "progress-bar" v-bind:xp = "topicStatsXP" v-bind:add = "0" />
       </div>
 
       <!-- Focus progress bar -->
       <div class = "focus">
         <h4>{{ problem.mainFocus }}</h4>
-        <ProgressBar class = "progress-bar" v-bind:xp = "focusStatsXP" v-bind:add = "add" />
+        <ProgressBar class = "progress-bar" v-bind:xp = "focusStatsXP" v-bind:add = "0" />
       </div>
     </div>
 
     <!-- Main content -->
-    <div class = "content" v-bind:style = "(result === 'correct') ? 'border: 1px solid rgb(5, 178, 0)' : ((result === 'incorrect' || (result === '' && pastAnswers.length > 0)) ? 'border: 1px solid #ff6469' : 'border: 1px solid rgba(17, 21, 33, 0.4)')">
-      <!-- Result -->
-      <div id = "result" v-if = "result !== '' || pastAnswers.length > 0">
-        <div id = "correct" v-if = "result === 'correct'"><i class = "fa fa-check"></i>Correct</div>
-        <div id = "incorrect" v-if = "result === 'incorrect' || (result === '' && pastAnswers.length > 0)"><i class = "fa fa-times"></i>Incorrect</div>
-        <div id = "gave-up" v-if = "result === 'gave up'"><i class = "fa fa-minus-circle"></i>You Gave Up</div>
-      </div>
-
+    <div class = "content" v-bind:style = "'border: 1px solid rgba(17, 21, 33, 0.4)'">
       <!-- Problem summary -->
       <div id = "summary">
         <!-- Difficulty -->
@@ -54,49 +44,34 @@
       <!-- Diagram (only shows if diagram is non-null) -->
       <div id = "diagram" v-if = "problem.diagram !== null" v-html = "problem.diagram"></div>
 
-      <!-- Hints (only shows if no result) -->
-      <div id = "hints" v-if = "result === ''">
-        <!-- Hint one (only shows if at least one answer already submitted) -->
-        <p class = "hint one" v-if = "pastAnswers.length >= 1">Hint: <vue-mathjax v-bind:formula = "problem.hintOne" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></p>
-
-        <!-- Hint two (only shows if hint two exists and if at least two answers already submitted) -->
-        <p class = "hint one" v-if = "pastAnswers.length >= 2 && problem.hintTwo !== null">Hint: <vue-mathjax v-bind:formula = "problem.hintTwo" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></p>
-      </div>
-
-      <!-- Previous answers (only shows if at least one answer already submitted) -->
-      <div id = "previous-answers" v-if = "pastAnswers.length >= 1 && result === ''">Past Answers:
-        <span class = "previous-answer" v-bind:key = "answer" v-for = "(answer, index) in pastAnswers"><vue-mathjax v-bind:formula = "'$' + answer + '$'" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax>{{ (index === pastAnswers.length - 1 ? '' : ', ') }}</span>
-      </div>
-
-      <!-- Problem answer (only shows if no result) -->
-      <div class = "flex row problem" v-if = "result === ''">
+      <div class = "flex row problem">
         <div id = "answer-container">
-          <!-- Answer field -->
-          <mathlive-mathfield class = "math-input" virtual-keyboard-mode = "auto" v-on:focus = "mathInputFocusStyle = [{boxShadow: '0 0 10px 0 rgba(40, 46, 91, 0.4)'}]" v-on:blur = "mathInputFocusStyle = null" v-bind:style = "mathInputFocusStyle" v-model = "currAnswer"></mathlive-mathfield>
-
-          <!-- Expecting (details what form the answer should be in) -->
           <span class = "expecting">Expecting: {{ algebraicAnswer ? (problem.mustMatch ? "Exact algebraic expression (must match form exactly)" : "Algebraic expression (as simplified as possible)") : (problem.mustMatch ? "Exact numerical expression (must match both form and value exactly)" : (problem.error === "0" ? "Exact numerical answer" : "Numerical answer (must match value within a " + problem.error + "% error)")) }}</span>
         </div>
+      </div>
 
-        <!-- Buttons -->
-        <div class = "buttons">
-          <button id = "submit-pr" class = "button blue top" v-on:click = "onSubmit">Submit</button>
-          <button id = "give-up" class = "button bottom red" v-on:click = "gaveUp">Give Up</button>
-          <!-- Skip is disabled if at least one attempt has already been submitted -->
-          <button id = "skip" class = "button bottom" v-on:click = "skip" v-bind:class = "pastAnswers.length > 0 ? 'disabled' : ''">Skip</button>
-        </div>
+      <!-- Hints (only shows if no result) -->
+      <div id = "hints">
+        <!-- Hint one (only shows if at least one answer already submitted) -->
+        <p class = "hint one">Hint: <vue-mathjax v-bind:formula = "problem.hintOne" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></p>
+
+        <!-- Hint two (only shows if hint two exists and if at least two answers already submitted) -->
+        <p class = "hint two" v-if = "problem.hintTwo !== null">Hint: <vue-mathjax v-bind:formula = "problem.hintTwo" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></p>
       </div>
 
       <!-- Solution (only shows if result is showing) -->
-      <div id = "solution" v-if = "result !== ''">
+      <div id = "solution">
         <!-- Student previous answers -->
         <div id = "student-answers">
           <!-- If result was "correct" then most recent answer is colored green (since it was the correct one) -->
-          <div v-for = "(answer, index) in pastAnswers" v-bind:key = "answer" v-bind:class = "(result === 'correct' && index === pastAnswers.length - 1) ? 'correct' : 'incorrect'">{{ ordinalNumbers[index] }} Response: <vue-mathjax v-bind:formula = "'$' + answer + '$'" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></div>
+          <div v-for = "attempt in problem.pastAttempts" v-bind:key = "attempt.user_attempt_id" v-bind:class = "attempt.student_answer === '' || attempt.student_answer === null || attempt.give_up === '1' ? 'gave-up' : (attempt.correct === '1' ? 'correct' : 'incorrect')">
+            <span>{{ attempt.student_answer === "" || attempt.student_answer === null || attempt.give_up === "1" ? "Gave Up" : "Response: " }}<vue-mathjax v-if = "attempt.student_answer !== '' && attempt.student_answer !== null && attempt.give_up !== '1'" v-bind:formula = "'$' + attempt.student_answer + '$'" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></span>
+            <span>{{ months[new Date(attempt.date_attempted).getMonth()] + " " + new Date(attempt.date_attempted).getDate() + " " + new Date(attempt.date_attempted).getFullYear() }}</span>
+          </div>
         </div>
 
         <!-- Answer (does not show if result is correct since then it is already shown in student previous answers) -->
-        <div id = "answer" v-if = "result !== 'correct'">Answer: <vue-mathjax class = "correct"  v-bind:formula = "'$' + problem.answer + '$'" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></div>
+        <div id = "answer">Answer: <vue-mathjax class = "correct"  v-bind:formula = "'$' + problem.answer + '$'" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></div>
 
         <!-- Solution text -->
         <div id = "solution-text">
@@ -108,13 +83,9 @@
       </div>
 
       <!-- Solution buttons -->
-      <div class = "solution buttons" v-if = "result !== ''">
+      <div class = "solution buttons">
         <button id = "report" v-on:click = "reportErrorPressed" class = "button" v-if = "problem.problemID !== null"><i class = "fa fa-flag"></i>Report an Error</button>
-      </div>
-
-      <!-- Next button -->
-      <button id = "next" v-on:click = "next" v-if = "result !== ''">Next<div class = "arrow"><div></div><div></div><div></div></div></button>
-    </div>
+      </div></div>
 
     <!-- Source -->
     <div class = "source" v-if = "problem.source != null">Source: {{ problem.source.source + " (" + problem.source.author + ") " + (problem.problemNumber !== "" ? "#" : "") + problem.problemNumber }}</div>
@@ -149,9 +120,7 @@ export default {
   data() {
     return {
       ordinalNumbers: ["First", "Second", "Third", "Fourth", "Fifth"],
-      pastAnswersUnofficial: [],
-      currAnswerUnofficial: "",
-      resultUnofficial: "",
+      months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
       wrong: false,
       mathInputFocusStyle: null,
       reportError: false,
@@ -163,59 +132,6 @@ export default {
       userStats: 'UserStats',
       submitData: 'ProblemMetaData'
     }),
-    // pastAnswers, map to "PastAnswers" from store if official (get and set), otherwise return unofficial past answers from component data (get and set)
-    pastAnswers: {
-      get() {
-        if (this.official) {
-          return this.$store.getters.PastAnswers;
-        } else {
-          return this.pastAnswersUnofficial;
-        }
-      },
-      set(value) {
-        if (this.official) {
-          this.$store.commit('setPastAnswers', value);
-        } else {
-          this.pastAnswersUnofficial = value;
-        }
-      }
-    },
-
-    // result, map to "result" from store if official (get and set), otherwise return unofficial result from component data (get and set)
-    result: {
-      get() {
-        if (this.official) {
-          return this.$store.getters.Result;
-        } else {
-          return this.resultUnofficial;
-        }
-      },
-      set(value) {
-        if (this.official) {
-          this.$store.commit('setResult', value);
-        } else {
-          this.resultUnofficial = value;
-        }
-      }
-    },
-
-    // currAnswer, map to "CurrAnswer" from store if official (get and set), otherwise return unofficial curr answer from component data (get and set)
-    currAnswer: {
-      get() {
-        if (this.official) {
-          return this.$store.getters.CurrAnswer;
-        } else {
-          return this.currAnswerUnofficial;
-        }
-      },
-      set(value) {
-        if (this.official) {
-          this.$store.commit('setCurrAnswer', value);
-        } else {
-          this.currAnswerUnofficial = value;
-        }
-      }
-    },
 
     // otherFociList, creates "Also Includes: ..." string from otherFoci list
     otherFociList: function() {
@@ -303,19 +219,6 @@ export default {
       } else {
         return this.focusStats.xp;
       }
-    },
-
-    // add, calculates the xp that will be added to both progress bars if correct
-    add: function() {
-      if (this.result !== "" || !this.official || this.problem.completed) {
-        // Add should be zero if result is showing
-        console.log("Hello");
-        return 0;
-      } else if (this.focusStats.streak > 0 && (this.focusStats.streak + 1) % 5 === 0) {
-        return Math.floor(1.2*(this.focusStats.xp+this.problem.difficulty*(3-this.pastAnswers.length))) - this.focusStats.xp;
-      } else {
-        return this.problem.difficulty*(3-this.pastAnswers.length);
-      }
     }
   },
   methods: {
@@ -327,152 +230,6 @@ export default {
     // reportErrorClose, closes ReportError popup
     reportErrorClose: function() {
       this.reportError = false;
-    },
-
-    // onSubmit, submits student answer
-    onSubmit: function() {
-      let self = this;
-
-      // Ensures student answer is not blank and has not already been tried
-      if (this.currAnswer === "") {
-        this.$store.dispatch('Confirmation', "Please enter an answer before submitting");
-      } else if (this.pastAnswers.includes(this.currAnswer)) {
-        this.$store.dispatch('Confirmation', "You cannot enter an answer that you have already tried");
-      } else {
-        this.$store.commit('setProcessing', true);
-
-        // Wolfram URL
-        const wolframURL = "https://www.wolframcloud.com/obj/cf8ac212-d924-4634-98fc-9f21673f629f";
-
-        // Encoded Mathematica request
-        const request = encodeURI(wolframURL + "?studentAnswer=" + self.currAnswer + "&correctAnswer=" + self.problem.answer + "&error=" + self.problem.error + "&mustMatch=" + (self.problem.mustMatch ? "true" : "false"));
-
-        // API POST request to /external-request with Mathematica request string as URL
-        axios.post("wp-json/physics_genie/external-request", JSON.stringify({
-          method: "GET",
-          url: request
-        }), {withCredentials: true, "Content-Type": "application/json", headers: {'Authorization': 'Bearer ' + self.$store.getters.Token}}).then((response) => {
-          // If response is "True" run correct function, otherwise run incorrect function
-          axios.post("wp-json/physics_genie/submit-attempt", JSON.stringify({problem_id: self.problem.problemID, student_answer: self.currAnswer, correct: response.data === "True"}), {headers: {"Content-Type": "application/json", 'Authorization': 'Bearer ' + self.$store.getters.Token}}).then((res) => {
-            if (JSON.parse(res.data).correct) {
-              self.correct();
-            } else {
-              self.incorrect();
-            }
-          });
-        });
-      }
-    },
-
-    // async correct, runs when student's answer is correct
-    correct: async function() {
-      // Add correct answer to previous answers list
-      this.pastAnswers.push(this.currAnswer);
-
-      // Set processingResult for xp delay fix
-      this.processingResult = "correct";
-
-      // Set result
-      this.result = "correct";
-
-      // Reset currAnswer to blank string
-      this.currAnswer = "";
-
-      this.$store.commit('setProcessing', false);
-      // If problem is an official attempt then submit the attempt and update user stats
-      if (this.official) {
-        await this.$store.dispatch('SubmitAttempt', "correct");
-        await this.$store.dispatch('GetUserStats');
-        await this.$store.dispatch('GetPastProblems');
-      }
-
-      // Reset processingResult to blank string
-      this.processingResult = "";
-    },
-
-    // async incorrect, runs when student's answer is incorrect
-    incorrect: async function() {
-      // Add incorrect answer to previous answers list
-      this.pastAnswers.push(this.currAnswer);
-
-      // Set currAnswer to blank string
-      this.currAnswer = "";
-
-      this.$store.commit('setProcessing', false);
-      // If third incorrect answer, then run incorrect result logic
-      if (this.pastAnswers.length === 3) {
-        // Set processingResult for xp delay fix
-        this.processingResult = "incorrect";
-
-        // Set result
-        this.result = "incorrect";
-
-        // If problem is an official attempt then submit the attempt and update user stats
-        if (this.official) {
-          await this.$store.dispatch('SubmitAttempt', "incorrect");
-          await this.$store.dispatch('GetUserStats');
-          await this.$store.dispatch('GetPastProblems');
-        }
-      }
-
-      // Reset processingResult to blank string
-      this.processingResult = "";
-    },
-
-    // async gaveUp, give up on current problem
-    gaveUp: async function() {
-      // Set processingResult for xp delay fix
-      this.processingResult = "incorrect";
-
-      // Set result
-      this.result = "gave up";
-
-      // Set currAnswer to blank string
-      this.currAnswer = "";
-
-      // If problem is an official attempt then submit the attempt and update user stats
-      if (this.official) {
-        await this.$store.dispatch('SubmitAttempt', "gave up");
-        await this.$store.dispatch('GetUserStats');
-        await this.$store.dispatch('GetPastProblems');
-      }
-
-      // Reset processingResult to blank string
-      this.processingResult = "";
-    },
-
-    // async skip, skip current problem and get next one
-    skip: async function() {
-      // If problem is an official attempt then get next problem
-      if (this.official) {
-        this.$store.commit('setProcessing', true);
-        // API PUT request /reset-curr-problem to ensure database deletes record of current problem
-        await axios.put("wp-json/physics_genie/reset-curr-problem", null, {headers: {'Authorization': 'Bearer ' + this.$store.getters.Token}});
-        await this.$store.dispatch('GetCurrProblem');
-        this.$store.commit('setProcessing', false);
-      }
-
-      // Reset previous answers
-      this.pastAnswers = [];
-
-      // Reset result
-      this.result = "";
-    },
-
-    // async next, get next problem
-    next: async function() {
-      // If problem is an official attempt then get next problem
-      if (this.official) {
-        this.$store.commit('setProcessing', true);
-        await this.$store.dispatch('GetCurrProblem');
-        this.$store.commit('setProcessing', false);
-      }
-
-      // Reset previous answers
-      this.pastAnswers = [];
-
-      // Reset result
-      this.result = "";
     }
   }
 }
@@ -537,39 +294,6 @@ export default {
 
   .reported-errors:hover div:not(.num) {
     width: 260px;
-  }
-
-  /* Reattempt styling*/
-  .reattempt {
-    position: absolute;
-    padding: 5px;
-    z-index: 100;
-    right: 0;
-    top: -33px;
-    font-family: "Montserrat", sans-serif;
-    border-top: 1px solid black;
-    overflow: hidden;
-    display: flex;
-    flex-direction: row;
-    height: 20px;
-  }
-
-  .reattempt .fa {
-    margin-right: 6px;
-  }
-
-  .reattempt div {
-    overflow: hidden;
-    display: block;
-    font-size: 12px;
-    margin-left: 3px;
-    width: 0;
-    margin-top: 2px;
-    transition: width .3s ease;
-  }
-
-  .reattempt:hover div {
-    width: 275px;
   }
 
   /* Progress bars styling */
@@ -656,7 +380,7 @@ export default {
   }
 
 
-  /* Hints, student previous answes, problem text and button styling */
+  /* Hints, student previous answers, problem text and button styling */
   #hints {
     margin-top: 10px;
     margin-bottom: 50px;
@@ -667,7 +391,7 @@ export default {
   }
 
   #answer-container .expecting {
-    margin: 10px 0 0 20px;
+    margin: 10px 0 0 30px;
     display: inline-block;
     font-size: 10px;
     color: #285380;
@@ -804,6 +528,9 @@ export default {
     padding: 15px;
     margin: 10px 100px 20px 50px;
     box-shadow: -0.1px 0 10px rgba(120, 120, 120, 0.5);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
   }
 
   #student-answers .correct {
@@ -811,10 +538,15 @@ export default {
     color: rgb(5, 178, 0);
   }
 
+  #student-answers .gave-up {
+    background: rgba(39, 43, 80, 0.2);
+    color: #111521;
+  }
+
   #answer {
     font-style: italic;
     font-size: 16px;
-    margin-top: 15px;
+    margin-top: 40px;
     color: green;
   }
 

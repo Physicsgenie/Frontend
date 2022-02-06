@@ -39,6 +39,7 @@
         this.$store.dispatch('GetUserInfo');
         this.$store.dispatch('GetUserStats');
         this.$store.dispatch('GetSubmittedProblems');
+        this.$store.dispatch('GetPastProblems');
       }
     },
     mounted() {
