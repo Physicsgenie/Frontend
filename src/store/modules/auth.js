@@ -33,6 +33,7 @@ const actions = {
     await dispatch('GetUserStats', {root: true});
     commit('setResult', "", {root: true});
     dispatch('GetCurrProblem', {root: true});
+    dispatch('GetPastProblems', {root: true});
     dispatch('GetSubmittedProblems', {root: true});
   },
   async PasswordReset({}, email) {
