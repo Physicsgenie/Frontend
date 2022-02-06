@@ -32,7 +32,8 @@ const state = {
     mainFocusName: "",
     otherFoci: [],
     source: "",
-    problemNumber: ""
+    problemNumber: "",
+    completed: false
   },
   currSubmission: {
     problemID: null,
@@ -167,7 +168,8 @@ const actions = {
         otherFoci: data.other_foci,
         source: source,
         problemNumber: data.number_in_source,
-        problemErrors: data.problem_errors
+        problemErrors: data.problem_errors,
+        completed: data.active
       });
     }
   },
@@ -223,6 +225,7 @@ const actions = {
   async GetPastProblems({commit, getters}) {
     await axios.get('wp-json/physics_genie/user-problems', {headers: {'Authorization': 'Bearer ' + getters.Token}}).then((response) => {
       let problems = JSON.parse(response.data);
+      console.log(JSON.parse(response.data));
       for (let i = 0; i < problems.length; i++) {
         let problemTextShortened = problems[i].problem_text.replace(/\\\\/g, "\\").replace(/\\"/g, "'");
 
@@ -262,7 +265,8 @@ const actions = {
           problemNumber: problems[i].number_in_source,
           calculus: problems[i].calculus,
           problemErrors: problems[i].problem_errors,
-          pastAttempts: problems[i].attempts
+          pastAttempts: problems[i].attempts,
+          active: problems[i].active
         };
       }
       commit('setPastProblems', problems)

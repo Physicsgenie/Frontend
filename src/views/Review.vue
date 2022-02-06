@@ -8,6 +8,10 @@
     <!-- Problem Preview -->
     <div v-if = "problemPreview !== null" class = "preview" v-bind:style = "{height: $store.getters.WindowHeight + 'px'}">
       <div class = "preview-container">
+        <!-- Reactivate Problem Button -->
+        <button v-on:click = "activateProblem(problemPreview)" class = "activate" v-if = "problemPreview.active"><i class = "fa fa-minus"></i><span>Deactivate Problem</span></button>
+        <button v-on:click = "activateProblem(problemPreview)" class = "activate" v-else><i class = "fa fa-plus"></i><span>Reactivate Problem</span></button>
+
         <div class = "view-box">
           <!-- Problem -->
           <Problem v-bind:problem = "problemPreview" class = "problem" />
@@ -21,6 +25,10 @@
     <!-- Problem Review -->
     <div v-if = "problemReview !== null" class = "review preview" v-bind:style = "{height: $store.getters.WindowHeight + 'px'}">
       <div class = "preview-container">
+        <!-- Reactivate Problem Button -->
+        <button v-on:click = "activateProblem(problemReview)" class = "activate" v-if = "problemReview.active"><i class = "fa fa-minus"></i><span>Deactivate Problem</span></button>
+        <button v-on:click = "activateProblem(problemReview)" class = "activate" v-else><i class = "fa fa-plus"></i><span>Reactivate Problem</span></button>
+
         <div class = "view-box">
           <!-- Problem -->
           <ProblemReview v-bind:problem = "problemReview" class = "problem" />
@@ -37,7 +45,6 @@
       <div class = "top-bar">
         <div class = "summary">
           <div><span class = "bold">{{ problems.length }}</span> problem{{ problems.length === 1 ? "" : "s" }} attempted across <span class = "bold">{{ numberOfFoci }}</span> focus{{ numberOfFoci === 1 ? "" : "es" }}</div>
-<!--          <div><span class = "bold">{{ errorStats.errors }}</span> error{{ errorStats.errors === 1 ? "" : "s" }} found across <span class = "bold">{{ errorStats.problems }}</span> problem{{ errorStats.problems === 1 ? "" : "s" }}</div>-->
           <div class = "more-stats" v-on:click = "navigate('')">More Stats</div>
         </div>
         <div class = "play" v-on:click = "navigate('play')"><span>Play</span><i class = "fa fa-cubes"></i></div>
@@ -51,6 +58,42 @@
           <div class = "view-type-buttons">
             <i class = "fa fa-list" v-on:click = "changeViewType('list')" v-bind:class = "viewType === 'list' ? 'active' : ''"></i>
             <i class = "fa fa-th" v-on:click = "changeViewType('grid')" v-bind:class = "viewType === 'grid' ? 'active' : ''"></i>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class = "filters">
+          <div class = "list-by filter">
+            <h6>List By:</h6>
+            <select name = "top" v-model = "listBy">
+              <option value = "recency">Recency</option>
+              <option value = "topic">Topic</option>
+              <option value = "focus">Focus</option>
+              <option value = "difficulty">Difficulty</option>
+            </select>
+          </div>
+          <div class = "topic filter">
+            <h6>Topic:</h6>
+            <select name = "topic" v-model = "selectedTopic">
+              <option value = "all">All</option>
+              <option v-for = "topic in submitData.topics" v-bind:key = "topic.name" v-bind:value = "topic.name">{{ topic.name }}</option>
+            </select>
+          </div>
+          <div class = "focus filter">
+            <h6>Focus:</h6>
+            <select name = "focus" v-model = "selectedFocus">
+              <option value = "all">All</option>
+              <option v-for = "focus in possibleFocuses" v-bind:key = "focus.name" v-bind:value = "focus.name">{{ focus.name }}</option>
+            </select>
+          </div>
+          <div class = "difficulty filter">
+            <h6>Difficulty:</h6>
+            <select name = "difficulty" v-model = "selectedDifficulty">
+              <option value = "all">All</option>
+              <option value = "easy">Easy</option>
+              <option value = "medium">Medium</option>
+              <option value = "hard">Hard</option>
+            </select>
           </div>
         </div>
 
@@ -88,6 +131,7 @@ import User from "../components/User";
 import Problem from "../components/Problem";
 import ProblemReview from "../components/ProblemReview";
 import {VueMathjax} from 'vue-mathjax'
+import axios from "axios";
 
 export default {
   name: "Review",
@@ -102,14 +146,46 @@ export default {
     return {
       problemPreview: null,
       problemReview: null,
-      submitData: this.$store.getters.ProblemMetaData,
-      viewType: 'list'
+      viewType: 'list',
+      selectedTopic: "all",
+      selectedFocus: "all",
+      selectedDifficulty: "all",
+      listBy: "recency"
     }
   },
   computed: {
+    // problems, problem data as filtered and sorted by user inputs
     problems() {
-      return this.$store.getters.PastProblems.reverse();
+      let self = this;
+      let problems = this.$store.getters.PastProblems;
+      problems = problems.filter(function(problem) {return (self.selectedTopic === "all" || problem.topic === self.selectedTopic) && (self.selectedFocus === "all" || problem.mainFocus === self.selectedFocus) && (self.selectedDifficulty === "all" || (self.selectedDifficulty === "easy" && (parseInt(problem.difficulty) <= 3)) || (self.selectedDifficulty === "medium" && (parseInt(problem.difficulty) >=2 && parseInt(problem.difficulty) <= 4)) || (self.selectedDifficulty === "hard" && (parseInt(problem.difficulty) >=3)))});
+
+      if (self.listBy === "recency") {
+        problems.sort(function(problem1, problem2) {return new Date(problem2.pastAttempts[problem2.pastAttempts.length - 1].date_attempted) - new Date(problem1.pastAttempts[problem1.pastAttempts.length - 1].date_attempted)});
+      } else if (self.listBy === "topic") {
+        problems.sort(function(problem1, problem2) {return problem1.topic.localeCompare(problem2.topic) === 0 ? new Date(problem2.pastAttempts[problem2.pastAttempts.length - 1].date_attempted) - new Date(problem1.pastAttempts[problem1.pastAttempts.length - 1].date_attempted) : problem1.topic.localeCompare(problem2.topic)});
+      } else if (self.listBy === "focus") {
+        problems.sort(function(problem1, problem2) {return problem1.mainFocus.localeCompare(problem2.mainFocus) === 0 ? new Date(problem2.pastAttempts[problem2.pastAttempts.length - 1].date_attempted) - new Date(problem1.pastAttempts[problem1.pastAttempts.length - 1].date_attempted) : problem1.mainFocus.localeCompare(problem2.mainFocus)});
+      } else if (self.listBy === "difficulty") {
+        problems.sort(function(problem1, problem2) {return problem2.difficulty - problem1.difficulty === 0 ? new Date(problem2.pastAttempts[problem2.pastAttempts.length - 1].date_attempted) - new Date(problem1.pastAttempts[problem1.pastAttempts.length - 1].date_attempted) : problem2.difficulty - problem1.difficulty});
+      }
+
+      return problems;
     },
+
+    // submitData, map to "ProblemMetaData" from store (get only)
+    submitData() {
+      return this.$store.getters.ProblemMetaData;
+    },
+
+    // possibleFocuses, focuses that correspond to the current topic
+    possibleFocuses() {
+      let self = this;
+      let matchingTopics = this.submitData.topics.filter(function(topic) {return topic.name === self.selectedTopic});
+      let topicId = matchingTopics.length > 0 ? matchingTopics[0].topic_id : null;
+      return this.submitData.focuses.filter(function(focus) {return focus.topic === topicId});
+    },
+
     numberOfFoci() {
       let foci = [];
       for (let i = 0; i < this.problems.length; i++) {
@@ -119,6 +195,7 @@ export default {
       }
       return foci.length;
     },
+
     errorStats() {
       let result = {errors: 0, problems: 0};
       for (let i = 0; i < this.problems.length; i++) {
@@ -128,7 +205,7 @@ export default {
         }
       }
       return result;
-    }
+    },
   },
   methods: {
     // changeViewType (viewType => 'list' or 'grid'), changes view type
@@ -149,11 +226,44 @@ export default {
     // navigate (place => page to navigate to), navigate to passed-in page
     navigate: function(place) {
       this.$router.push("/" + place);
+    },
+
+    // activateProblem (problem => problem to reactivate/deactivate), reactivate or deactivate problem according to its current activation state
+    activateProblem: function(problem) {
+      let self = this;
+      console.log(problem);
+
+      self.$store.commit('setProcessing', true);
+      if (problem.active) {
+        axios.post('wp-json/physics_genie/deactivate-problem', JSON.stringify({
+          problem_id: problem.problemID
+        }), {headers: {'Content-Type': 'application/json','Authorization': 'Bearer ' + this.$store.getters.Token}}).then(() => {
+          // If no current problem, then set current problem with current user settings
+          if (self.$store.getters.CurrProblem === null) {
+            self.$store.dispatch('GetCurrProblem');
+          }
+          self.$store.dispatch('GetPastProblems');
+          self.problemPreview = null;
+          self.problemReview = null;
+          self.$store.commit('setProcessing', false);
+          self.$store.dispatch("Confirmation", "Problem successfully removed from the pool of possible problems")
+        });
+      } else {
+        axios.post('wp-json/physics_genie/activate-problem', JSON.stringify({
+          problem_id: problem.problemID
+        }), {headers: {'Content-Type': 'application/json','Authorization': 'Bearer ' + this.$store.getters.Token}}).then(() => {
+          // If no current problem, then set current problem with current user settings
+          if (self.$store.getters.CurrProblem === null) {
+            self.$store.dispatch('GetCurrProblem');
+          }
+          self.$store.dispatch('GetPastProblems');
+          self.problemPreview = null;
+          self.problemReview = null;
+          self.$store.commit('setProcessing', false);
+          self.$store.dispatch("Confirmation", "Problem successfully added back into the pool of possible problems")
+        });
+      }
     }
-  },
-  mounted() {
-    let hello = this.problems.reverse();
-    console.log(this.problems);
   }
 }
 
@@ -197,6 +307,40 @@ export default {
   padding: 0 80px;
   margin: 0;
   overflow-y: auto;
+}
+
+.preview .activate {
+  position: absolute;
+  left: 75px;
+  top: 25px;
+  background: none;
+  outline: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #285380;
+  border-radius: 10px;
+  border: 1px solid #285380;
+  transition: transform .3s ease;
+  display: flex;
+  padding: 0 7px;
+  height: 35px;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+}
+
+.preview .activate span {
+  width: 0;
+  display: inline-block;
+  overflow: hidden;
+  font-size: 13px;
+  margin: 0;
+  transition: width .3s ease, margin-right .3s ease;
+}
+
+.preview .activate:hover span {
+  width: inherit;
+  margin: 0 10px;
 }
 
 .preview .exit {
@@ -442,10 +586,40 @@ h1 {
   background: #ff845d;
 }
 
+/* Filters styling */
+.filters {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 10px 0;
+}
+
+.filters .filter {
+  display: flex;
+  flex-direction: row;
+  margin: 15px 20px;
+  height: 20px;
+  align-items: center;
+  font-family: "Nunito", sans-serif;
+}
+
+.filters .filter h6 {
+  font-size: 15px;
+  margin-right: 10px;
+}
+
+.filters .filter select {
+  outline: none;
+  padding: 5px;
+}
+
 /* Past Problems Styling */
 #past-problems {
   width: 95%;
-  margin-top: 30px;
+  margin-top: 10px;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;

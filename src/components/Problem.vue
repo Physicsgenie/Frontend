@@ -6,6 +6,9 @@
     <!-- Errors reported -->
     <div v-if = "problem.problemErrors !== undefined && problem.problemErrors.length > 0" class = "reported-errors"><i class = "fa fa-exclamation-circle"></i><div class = "num">{{ problem.problemErrors.length }}</div><div>error{{problem.problemErrors.length === 1 ? " has" : "s have"}} been reported on this problem</div></div>
 
+    <!-- Reattempt -->
+    <div v-if = "problem.completed" class = "reattempt"><div>This problem has been previously attempted</div><i class = "fa fa-retweet"></i></div>
+
     <!-- Progress bars -->
     <div id = "progress-bars">
       <!-- Topic progress bar (only shows if window width is greater than 850px -->
@@ -304,8 +307,9 @@ export default {
 
     // add, calculates the xp that will be added to both progress bars if correct
     add: function() {
-      if (this.result !== "" || !this.official) {
+      if (this.result !== "" || !this.official || this.problem.completed) {
         // Add should be zero if result is showing
+        console.log("Hello");
         return 0;
       } else if (this.focusStats.streak > 0 && (this.focusStats.streak + 1) % 5 === 0) {
         return Math.floor(1.2*(this.focusStats.xp+this.problem.difficulty*(3-this.pastAnswers.length))) - this.focusStats.xp;
@@ -470,9 +474,6 @@ export default {
       // Reset result
       this.result = "";
     }
-  },
-  mounted() {
-    console.log(this.problem);
   }
 }
 
@@ -536,6 +537,39 @@ export default {
 
   .reported-errors:hover div:not(.num) {
     width: 260px;
+  }
+
+  /* Reattempt styling*/
+  .reattempt {
+    position: absolute;
+    padding: 5px;
+    z-index: 100;
+    right: 0;
+    top: -33px;
+    font-family: "Montserrat", sans-serif;
+    border-top: 1px solid black;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    height: 20px;
+  }
+
+  .reattempt .fa {
+    margin-right: 6px;
+  }
+
+  .reattempt div {
+    overflow: hidden;
+    display: block;
+    font-size: 12px;
+    margin-left: 3px;
+    width: 0;
+    margin-top: 2px;
+    transition: width .3s ease;
+  }
+
+  .reattempt:hover div {
+    width: 275px;
   }
 
   /* Progress bars styling */
