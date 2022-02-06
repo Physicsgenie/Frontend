@@ -5,6 +5,7 @@ const state = {
   confirmations: [],
   windowHeight: null,
   windowWidth: null,
+  pastProblems: null,
   submittedProblems: null,
   problemMetaData: null,
   userSetup: {
@@ -97,6 +98,7 @@ const getters = {
   WindowHeight: state => state.windowHeight,
   WindowWidth: state => state.windowWidth,
   UserSetup: state => state.userSetup,
+  PastProblems: state => state.pastProblems,
   SubmittedProblems: state => state.submittedProblems,
   UserStats: state => state.userStats,
   ProblemMetaData: state => state.problemMetaData,
@@ -217,6 +219,54 @@ const actions = {
     // });
 
     commit('setUserStats', JSON.parse(response.data));
+  },
+  async GetPastProblems({commit, getters}) {
+    await axios.get('wp-json/physics_genie/user-problems', {headers: {'Authorization': 'Bearer ' + getters.Token}}).then((response) => {
+      let problems = JSON.parse(response.data);
+      for (let i = 0; i < problems.length; i++) {
+        let problemTextShortened = problems[i].problem_text.replace(/\\\\/g, "\\").replace(/\\"/g, "'");
+
+        if (problemTextShortened.length > 200) {
+          problemTextShortened = problemTextShortened.slice(0, 200);
+          if ((problemTextShortened.match(/\$/g)||[]).length % 2 === 1) {
+            problemTextShortened = problemTextShortened.slice(0, problemTextShortened.lastIndexOf("$"));
+          }
+
+          problemTextShortened += " ...";
+        }
+
+        let sourceName = null;
+
+        if (getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === problems[i].source}).length > 0) {
+          sourceName = getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === problems[i].source})[0].source;
+        }
+
+        problems[i] = {
+          problemID: problems[i].problem_id,
+          problemText: problems[i].problem_text.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+          problemTextShortened: problemTextShortened,
+          diagram: (problems[i].diagram === null) ? null : problems[i].diagram.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+          answer: problems[i].answer.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+          mustMatch: problems[i].must_match === "1",
+          error: problems[i].error,
+          solution: problems[i].solution.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+          solutionDiagram: (problems[i].solution_diagram === null) ? null : problems[i].solution_diagram.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+          hintOne: problems[i].hint_one.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+          hintTwo: (problems[i].hint_two === null) ? null : problems[i].hint_two.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+          difficulty: problems[i].difficulty,
+          topic: problems[i].topic,
+          mainFocus: problems[i].main_focus,
+          otherFoci: problems[i].other_foci,
+          source: problems[i].source,
+          sourceName: sourceName,
+          problemNumber: problems[i].number_in_source,
+          calculus: problems[i].calculus,
+          problemErrors: problems[i].problem_errors,
+          pastAttempts: problems[i].attempts
+        };
+      }
+      commit('setPastProblems', problems)
+    });
   },
   async GetSubmittedProblems({commit, getters}) {
     await axios.get('wp-json/physics_genie/contributor-problems', {headers: {'Authorization': 'Bearer ' + getters.Token}}).then((response) => {
@@ -424,6 +474,9 @@ const mutations = {
   },
   setUserStats(state, stats) {
     state.userStats = stats;
+  },
+  setPastProblems(state, problems) {
+    state.pastProblems = problems;
   },
   setSubmittedProblems(state, problems) {
     state.submittedProblems = problems;

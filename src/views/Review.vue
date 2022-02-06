@@ -14,7 +14,20 @@
         </div>
 
         <!-- Exit Preview Button -->
-        <button v-on:click = "problemPreview = null" class = "exit"><span>Exit Preview</span><i class = "fa fa-times"></i></button>
+        <button v-on:click = "problemPreview = null" class = "exit"><span>Exit Practice</span><i class = "fa fa-times"></i></button>
+      </div>
+    </div>
+
+    <!-- Problem Review -->
+    <div v-if = "problemReview !== null" class = "review preview" v-bind:style = "{height: $store.getters.WindowHeight + 'px'}">
+      <div class = "preview-container">
+        <div class = "view-box">
+          <!-- Problem -->
+          <ProblemReview v-bind:problem = "problemReview" class = "problem" />
+        </div>
+
+        <!-- Exit Preview Button -->
+        <button v-on:click = "problemReview = null" class = "exit"><span>Exit Review</span><i class = "fa fa-times"></i></button>
       </div>
     </div>
 
@@ -43,11 +56,11 @@
 
         <!-- Past Problems -->
         <div id = "past-problems" v-bind:class = "viewType">
-          <div v-for = "problem in problems.filter(function(problem) {return problem.problemErrors.length === 0})" v-bind:key = "problem.problemID" class = "problem">
+          <div v-for = "problem in problems" v-bind:key = "problem.problemID" class = "problem">
             <!-- Problem Buttons -->
             <div class = "buttons">
-              <button class = "button orange" v-on:click = "edit(problem.problemID)"><i class = "fa fa-pencil"></i>Edit</button>
-              <button class = "button" v-on:click = "previewProblem(problem)"><i class = "fa fa-eye"></i>Preview</button>
+              <button class = "button" v-on:click = "previewProblem(problem)"><i class = "fa fa-cubes"></i>Practice</button>
+              <button class = "button orange" v-on:click = "reviewProblem(problem)"><i class = "fa fa-retweet"></i>Review</button>
             </div>
 
             <!-- Problem Info -->
@@ -73,6 +86,7 @@
 import Menu from "../components/Menu";
 import User from "../components/User";
 import Problem from "../components/Problem";
+import ProblemReview from "../components/ProblemReview";
 import {VueMathjax} from 'vue-mathjax'
 
 export default {
@@ -81,17 +95,21 @@ export default {
     Menu,
     User,
     Problem,
+    ProblemReview,
     'vue-mathjax': VueMathjax
   },
   data() {
     return {
-      problems: this.$store.getters.SubmittedProblems,
       problemPreview: null,
+      problemReview: null,
       submitData: this.$store.getters.ProblemMetaData,
       viewType: 'list'
     }
   },
   computed: {
+    problems() {
+      return this.$store.getters.PastProblems.reverse();
+    },
     numberOfFoci() {
       let foci = [];
       for (let i = 0; i < this.problems.length; i++) {
@@ -123,16 +141,19 @@ export default {
       this.problemPreview = problem;
     },
 
-    // edit (problemId => problem ID of problem to edit), goes to edit portal for problem with passed-in problem ID
-    edit: function(problemID) {
-      window.scrollTo({top: 0, left: 0});
-      this.$router.push("/submit-portal/" + problemID);
+    // previewProblem (problem => problem to review), sets current reviewed problem to the one passed to this function
+    reviewProblem: function(problem) {
+      this.problemReview = problem;
     },
 
     // navigate (place => page to navigate to), navigate to passed-in page
     navigate: function(place) {
       this.$router.push("/" + place);
     }
+  },
+  mounted() {
+    let hello = this.problems.reverse();
+    console.log(this.problems);
   }
 }
 
