@@ -237,14 +237,14 @@ const actions = {
           problemTextShortened += " ...";
         }
 
+
         let sourceName = null;
         let source = null;
 
         if (getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === problems[i].source}).length > 0) {
           source = getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === problems[i].source})[0];
+          sourceName = source.source;
         }
-        
-        sourceName = source.source;
 
         problems[i] = {
           problemID: problems[i].problem_id,
