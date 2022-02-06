@@ -64,7 +64,7 @@
         <!-- Student previous answers -->
         <div id = "student-answers">
           <!-- If result was "correct" then most recent answer is colored green (since it was the correct one) -->
-          <div v-for = "attempt in problem.pastAttempts" v-bind:key = "attempt.user_attempt_id" v-bind:class = "attempt.student_answer === '' ? 'gave-up' : (attempt.correct === '1' ? 'correct' : 'incorrect')">
+          <div v-for = "attempt in problem.pastAttempts.filter(function(attempt) {return attempt.student_answer !== null})" v-bind:key = "attempt.user_attempt_id" v-bind:class = "attempt.student_answer === '' ? 'gave-up' : (attempt.correct === '1' ? 'correct' : 'incorrect')">
             <span>{{ attempt.student_answer === "" ? "Gave Up" : "Response: " }}<vue-mathjax v-if = "attempt.student_answer !== ''" v-bind:formula = "'$' + attempt.student_answer + '$'" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></span>
             <span>{{ months[new Date(attempt.date_attempted).getMonth()] + " " + new Date(attempt.date_attempted).getDate() + " " + new Date(attempt.date_attempted).getFullYear() }}</span>
           </div>
