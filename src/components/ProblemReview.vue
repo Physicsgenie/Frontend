@@ -231,6 +231,9 @@ export default {
     reportErrorClose: function() {
       this.reportError = false;
     }
+  },
+  mounted() {
+    console.log(this.problem);
   }
 }
 
