@@ -344,7 +344,7 @@ export default {
         const wolframURL = "https://www.wolframcloud.com/obj/ce79ada8-d31c-45cc-841a-5996b135bf3d";
 
         // Encoded Mathematica request
-        const request = encodeURI(wolframURL + "?studentAnswer=" + self.currAnswer + "&correctAnswer=" + self.problem.answer + "&error=" + self.problem.error + "&mustMatch=" + (self.problem.mustMatch ? "true" : "false"));
+        const request = encodeURI(wolframURL + "?studentAnswer=" + encodeURIComponent(self.currAnswer) + "&correctAnswer=" + encodeURIComponent(self.problem.answer) + "&error=" + self.problem.error + "&mustMatch=" + (self.problem.mustMatch ? "true" : "false"));
 
         // API POST request to /external-request with Mathematica request string as URL
         axios.post("wp-json/physics_genie/external-request", JSON.stringify({
