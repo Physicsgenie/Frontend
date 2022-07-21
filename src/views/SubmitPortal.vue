@@ -788,6 +788,12 @@ export default {
       });
 
       this.problemPreview.otherFoci = foci;
+
+      if (self.$store.getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === self.problemPreview.source}).length > 0) {
+        this.problemPreview.source = self.$store.getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === self.problemPreview.source})[0];
+      } else {
+        this.problemPreview.source = {source: self.problemPreview.sourceOther, author: self.problemPreview.author};
+      }
     }
   },
   mounted() {

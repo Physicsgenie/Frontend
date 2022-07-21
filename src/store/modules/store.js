@@ -176,50 +176,6 @@ const actions = {
   async GetUserStats({commit, getters}) {
     let response = await axios.get('wp-json/physics_genie/user-stats', {headers: {'Authorization': 'Bearer ' + getters.Token}});
 
-    // let overall = response.data.filter(function(row) {return row.topic === "z" && row.focus === "z"})[0];
-    //
-    // let stats = {
-    //   topics: [],
-    //   presented: parseInt(overall.num_presented),
-    //   correct: parseInt(overall.num_correct),
-    //   avgAttempts: parseFloat(overall.avg_attempts),
-    //   xp: parseInt(overall.xp),
-    //   streak: parseInt(overall.streak),
-    //   longestWinstreak: parseInt(overall.longest_winstreak),
-    //   longestLosestreak: parseInt(overall.longest_losestreak)
-    // };
-    //
-    // getters.ProblemMetaData.topics.forEach(function(topic) {
-    //   let topicRow = response.data.filter(function(row) {return row.topic === topic.topic && row.focus === "z"})[0];
-    //   stats.topics.push({
-    //     topic: topic.name,
-    //     topicId: topic.topic,
-    //     foci: [],
-    //     presented: parseInt(topicRow.num_presented),
-    //     correct: parseInt(topicRow.num_correct),
-    //     avgAttempts: parseFloat(topicRow.avg_attempts),
-    //     xp: parseInt(topicRow.xp),
-    //     streak: parseInt(topicRow.streak),
-    //     longestWinstreak: parseInt(topicRow.longest_winstreak),
-    //     longestLosestreak: parseInt(topicRow.longest_losestreak)
-    //   });
-    //
-    //   getters.ProblemMetaData.focuses.filter(function(focus) {return focus.topic === topic.topic}).forEach(function(focus) {
-    //     let focusRow = response.data.filter(function(row) {return row.topic === topic.topic && row.focus === focus.focus})[0];
-    //     stats.topics[stats.topics.length - 1].foci.push({
-    //       focus: focus.name,
-    //       focusId: focus.focus,
-    //       presented: parseInt(focusRow.num_presented),
-    //       correct: parseInt(focusRow.num_correct),
-    //       avgAttempts: parseFloat(focusRow.avg_attempts),
-    //       xp: parseInt(focusRow.xp),
-    //       streak: parseInt(focusRow.streak),
-    //       longestWinstreak: parseInt(focusRow.longest_winstreak),
-    //       longestLosestreak: parseInt(focusRow.longest_losestreak)
-    //     });
-    //   });
-    // });
-
     commit('setUserStats', JSON.parse(response.data));
   },
   async GetPastProblems({commit, getters}) {
