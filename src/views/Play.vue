@@ -100,8 +100,8 @@
           } else {
             // Change source from id to actual source name
             let source = null;
-            if (self.$store.getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === response.data.source}).length > 0) {
-              source = self.$store.getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === response.data.source})[0];
+            if (self.$store.getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === data.source}).length > 0) {
+              source = self.$store.getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === data.source})[0];
             }
 
             // Set problem values from GET request response data
