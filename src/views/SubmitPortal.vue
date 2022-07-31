@@ -241,7 +241,7 @@
 
           <!-- Topic Input -->
           <div class = "input-container topic">
-            <select id = "topic" name = "topic" v-bind:style = "(currSubmission.topic !== '') ? {color: 'black'} : {color: '#929292'}" v-on:change = "function(event) {setCurrSubmissionField('topic', event.target.value)}">
+            <select id = "topic" name = "topic" v-bind:style = "(currSubmission.topic !== '') ? {color: 'black'} : {color: '#929292'}" v-on:change = "topicChanged">
               <option disabled selected value> -- Select a Topic -- </option>
               <option v-for = "topic in submitData.topics" v-bind:key = "topic.name" v-bind:selected = "topic.name === currSubmission.topic" v-bind:value = "topic.name">{{ topic.name }}</option>
             </select>
@@ -252,7 +252,7 @@
             <h6>Main Focus</h6>
             <select id = "main-focus" name = "main-focus" v-bind:style = "(currSubmission.mainFocus !== '') ? {color: 'black'} : {color: '#929292'}" v-on:change = "function(event) {setCurrSubmissionField('mainFocus', event.target.value)}">
               <option disabled selected value> -- Select a Focus -- </option>
-              <option v-for = "focus in submitData.focuses" v-bind:key = "focus.name" v-bind:selected = "focus.name === currSubmission.mainFocus" v-bind:value = "focus.name">{{ focus.name }}</option>
+              <option v-for = "focus in focusesInTopic" v-bind:key = "focus.name" v-bind:selected = "focus.name === currSubmission.mainFocus" v-bind:value = "focus.name">{{ focus.name }}</option>
             </select>
           </div>
 
@@ -266,7 +266,7 @@
               <!-- Focus Selector -->
               <div v-for = "(focus, index) in currSubmission.otherFoci" class = "other-focus" v-bind:key = "index">
                 <select v-bind:name = "'focus_' + index" v-on:change = "focusesChanged($event, index)">
-                  <option v-for = "(possibleFocus, i) in submitData.focuses" v-bind:key = "i" v-bind:selected = "focus === possibleFocus.name" v-bind:disabled = "focus !== possibleFocus.name && (currSubmission.otherFoci.includes(possibleFocus.name))" v-bind:value = "possibleFocus.name">{{ possibleFocus.name }}</option>
+                  <option v-for = "(possibleFocus, i) in focusesInTopic" v-bind:key = "i" v-bind:selected = "focus === possibleFocus.name" v-bind:disabled = "(focus !== possibleFocus.name && (currSubmission.otherFoci.includes(possibleFocus.name))) || currSubmission.mainFocus === possibleFocus.name" v-bind:value = "possibleFocus.name">{{ possibleFocus.name }}</option>
                 </select>
                 <i class = "fa fa-times" style = "color: red; cursor: pointer;" v-on:click = "removeFocus(index)"></i>
               </div>
@@ -426,6 +426,16 @@ export default {
     // algebraicAnswer, returns boolean testing whether or not the problem's answer is algebraic or not
     algebraicAnswer: function() {
       return this.$store.functions.testAlgebraic(this.currSubmission.answer);
+    },
+
+    focusesInTopic: function() {
+      let self = this;
+      let topicId = "-1";
+      let topic = this.submitData.topics.filter(function(el) {return el.name === self.currSubmission.topic});
+      if (topic.length > 0) {
+        topicId = topic[0].topic_id;
+      }
+      return this.submitData.focuses.filter(function(focus) {return focus.topic === topicId});
     }
   },
   watch: {
@@ -645,6 +655,13 @@ export default {
       this.currSubmission.difficulty = difficulty;
     },
 
+    // topicChanged ()
+    topicChanged: function(event) {
+      this.setCurrSubmissionField("topic", event.target.value);
+      this.setCurrSubmissionField("mainFocus", this.focusesInTopic[0].name);
+      this.setCurrSubmissionField("otherFoci", []);
+    },
+
     // addFocus, add new other foci selector when "Add Focus" button is pressed
     addFocus: function() {
       let i = 0;
@@ -797,6 +814,7 @@ export default {
     }
   },
   mounted() {
+    console.log(this.submitData);
     // If problem is being edited, set currSubmission values appropriately
     let self = this;
     if (this.$route.params.id !== undefined) {

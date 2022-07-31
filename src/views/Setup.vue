@@ -113,7 +113,10 @@ export default {
     // submitData, map to "ProblemMetaData" from store (get only)
     submitData: {
       get() {
-        return this.$store.getters.ProblemMetaData;
+        let allData = this.$store.getters.ProblemMetaData;
+        allData.topics = [allData.topics[0]];
+        allData.focuses = allData.focuses.filter(function(focus) {return focus.topic === "1"});
+        return allData;
       }
     }
   },
