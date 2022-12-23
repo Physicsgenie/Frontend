@@ -86,8 +86,6 @@
     mounted() {
       let self = this;
 
-      console.log(this.$store.getters.CurrProblem);
-
       // If problem param provided, then use it to request specific problem (based on param)
       if (this.$route.params.problem !== undefined) {
 

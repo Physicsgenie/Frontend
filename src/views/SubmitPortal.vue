@@ -266,7 +266,7 @@
               <!-- Focus Selector -->
               <div v-for = "(focus, index) in currSubmission.otherFoci" class = "other-focus" v-bind:key = "index">
                 <select v-bind:name = "'focus_' + index" v-on:change = "focusesChanged($event, index)">
-                  <option v-for = "(possibleFocus, i) in focusesInTopic" v-bind:key = "i" v-bind:selected = "focus === possibleFocus.name" v-bind:disabled = "(focus !== possibleFocus.name && (currSubmission.otherFoci.includes(possibleFocus.name))) || currSubmission.mainFocus === possibleFocus.name" v-bind:value = "possibleFocus.name">{{ possibleFocus.name }}</option>
+                  <option v-for = "(possibleFocus, i) in submitData.focuses" v-bind:key = "i" v-bind:selected = "focus === possibleFocus.name" v-bind:disabled = "(focus !== possibleFocus.name && (currSubmission.otherFoci.includes(possibleFocus.name))) || currSubmission.mainFocus === possibleFocus.name" v-bind:value = "possibleFocus.name">{{ possibleFocus.name }}</option>
                 </select>
                 <i class = "fa fa-times" style = "color: red; cursor: pointer;" v-on:click = "removeFocus(index)"></i>
               </div>
@@ -773,7 +773,7 @@ export default {
       // Copies currSubmission object into problemPreivew object
       this.problemPreview = Object.assign({}, this.currSubmission);
 
-      // Cleans of diagram and solutionDiagram fields depending on their type
+      // Cleans diagram and solutionDiagram fields depending on their type
       this.problemPreview.diagram = ((this.problemPreview.diagramType === "file" && this.problemPreview.diagramFile !== null) ? this.problemPreview.diagramFile.text : (this.problemPreview.diagramType === "code" ? this.problemPreview.diagram : ""));
       this.problemPreview.solutionDiagram = ((this.problemPreview.solutionDiagramType === "file" && this.problemPreview.solutionDiagramFile !== null) ? this.problemPreview.solutionDiagramFile.text : (this.problemPreview.solutionDiagramType === "code" ? this.problemPreview.solutionDiagram : ""));
 
@@ -811,6 +811,8 @@ export default {
       } else {
         this.problemPreview.source = {source: self.problemPreview.sourceOther, author: self.problemPreview.author};
       }
+
+      console.log("Problem Preview: ", this.problemPreview);
     }
   },
   mounted() {

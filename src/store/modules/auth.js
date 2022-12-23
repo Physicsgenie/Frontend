@@ -36,7 +36,7 @@ const actions = {
     dispatch('GetPastProblems', {root: true});
     dispatch('GetSubmittedProblems', {root: true});
   },
-  async PasswordReset({}, email) {
+  async PasswordReset(_, email) {
     await axios.post('wp-json/physics_genie/password-reset', JSON.stringify({email: email}), {withCredentials: false, headers: {"Content-Type": "application/json"}});
   },
   async GetUserMetadata({commit, getters}) {

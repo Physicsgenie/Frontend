@@ -138,13 +138,13 @@ const actions = {
     commit('setProblemMetaData', JSON.parse(response.data));
   },
   async GetCurrProblem({commit, getters}) {
-    console.log("startin curr probelm");
     let response = await axios.get('wp-json/physics_genie/problem', {headers: {'Authorization': 'Bearer ' + getters.Token}});
-    console.log("curr problem response", response.data);
+
     if (response.data === "") {
       commit('setCurrProblem', null);
     } else {
 
+      console.log("Data: ", response.data);
       let data = JSON.parse(response.data);
       let source = null;
 
