@@ -32,17 +32,34 @@
         this.$store.commit("setWindowWidth");
       },
 
+      clearLocalStorage: function() {
+        let allStrings = '';
+        for(let key in window.localStorage){
+          if(window.localStorage.hasOwnProperty(key)){
+            allStrings += window.localStorage[key];
+          }
+        }
+
+        let storageInMB = (3 + allStrings.length / 512) / 1024;
+        if (storageInMB >= 5) {
+          window.localStorage.clear();
+        }
+      },
+
       // async getData, Calls store actions to retrieve current user's stats+data
       getData: async function() {
-        this.$store.dispatch('GetProblemMetadata');
-        this.$store.dispatch('GetUserMetadata');
-        this.$store.dispatch('GetUserInfo');
-        this.$store.dispatch('GetUserStats');
-        this.$store.dispatch('GetSubmittedProblems');
-        this.$store.dispatch('GetPastProblems');
+        const getProblemMetadata = this.$store.dispatch('GetProblemMetadata');
+        const getUserMetadata =  this.$store.dispatch('GetUserMetadata');
+        const getUserInfo = this.$store.dispatch('GetUserInfo');
+        const getUserStats = this.$store.dispatch('GetUserStats');
+        const getSubmittedProblems = this.$store.dispatch('GetSubmittedProblems');
+        const getPastProblems = this.$store.dispatch('GetPastProblems');
+        await Promise.allSettled([getProblemMetadata, getUserMetadata, getUserInfo, getUserStats, getSubmittedProblems, getPastProblems]);
       }
     },
     mounted() {
+      this.clearLocalStorage();
+
       // Calls onResize on app load and whenever window is resized
       this.onResize();
       window.addEventListener("resize", this.onResize);

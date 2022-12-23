@@ -351,7 +351,6 @@ export default {
           method: "GET",
           url: request
         }), {withCredentials: true, "Content-Type": "application/json", headers: {'Authorization': 'Bearer ' + self.$store.getters.Token}}).then((response) => {
-          console.log("External Request Response: ", response);
           // If response is "True" run correct function, otherwise run incorrect function
           axios.post("wp-json/physics_genie/submit-attempt", JSON.stringify({problem_id: self.problem.problemID, student_answer: self.currAnswer, correct: response.data === "True"}), {headers: {"Content-Type": "application/json", 'Authorization': 'Bearer ' + self.$store.getters.Token}}).then((res) => {
             if (JSON.parse(res.data).correct) {
