@@ -794,17 +794,17 @@ export default {
       }
 
 
-      // Clean otherFoci array and set it correctly
-      let foci = [];
-      this.problemPreview.otherFoci.forEach(function(otherFocus) {
-        if (self.submitData.focuses.filter(function(focus) {return focus.focus === otherFocus})[0] === undefined) {
-          foci.push(errorMessage);
-        } else {
-          foci.push(self.submitData.focuses.filter(function(focus) {return focus.focus === otherFocus})[0].name);
-        }
-      });
-
-      this.problemPreview.otherFoci = foci;
+      // Clean otherFoci array and set it correctly [DOESN'T SEEM TO WORK ANYMORE]
+      // let foci = [];
+      // this.problemPreview.otherFoci.forEach(function(otherFocus) {
+      //   if (self.submitData.focuses.filter(function(focus) {return focus.focus === otherFocus})[0] === undefined) {
+      //     foci.push(errorMessage);
+      //   } else {
+      //     foci.push(self.submitData.focuses.filter(function(focus) {return focus.focus === otherFocus})[0].name);
+      //   }
+      // });
+      //
+      // this.problemPreview.otherFoci = foci;
 
       if (self.$store.getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === self.problemPreview.source}).length > 0) {
         this.problemPreview.source = self.$store.getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === self.problemPreview.source})[0];
@@ -812,11 +812,9 @@ export default {
         this.problemPreview.source = {source: self.problemPreview.sourceOther, author: self.problemPreview.author};
       }
 
-      console.log("Problem Preview: ", this.problemPreview);
     }
   },
   mounted() {
-    console.log(this.submitData);
     // If problem is being edited, set currSubmission values appropriately
     let self = this;
     if (this.$route.params.id !== undefined) {
