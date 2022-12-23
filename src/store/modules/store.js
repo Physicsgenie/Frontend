@@ -144,7 +144,6 @@ const actions = {
       commit('setCurrProblem', null);
     } else {
 
-      console.log("Data: ", response.data);
       let data = JSON.parse(response.data);
       let source = null;
 
