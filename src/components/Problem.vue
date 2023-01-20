@@ -1,5 +1,6 @@
 <template>
   <div id = "problem">
+
     <!-- Report error -->
     <ReportError v-if = "reportError" v-bind:problemID = "problem.problemID" v-on:close = "reportErrorClose" style = "z-index: 500;" />
 
@@ -130,6 +131,10 @@ import {VueMathjax} from 'vue-mathjax'
 import { mapGetters } from "vuex";
 import ProgressBar from './ProgressBar';
 import ReportError from './ReportError';
+import Vue from 'vue';
+import VueConfetti from 'vue-confetti';
+
+Vue.use(VueConfetti)
 
 export default {
   name: "Problem",
@@ -378,6 +383,18 @@ export default {
       this.currAnswer = "";
 
       this.$store.commit('setProcessing', false);
+
+      // Start confetti
+      this.$confetti.start({
+        defaultSize: 8,
+        defaultDropRate: 15
+      });
+
+      let self = this;
+      window.setTimeout(function() {
+        self.$confetti.stop();
+      }, 3000);
+
       // If problem is an official attempt then submit the attempt and update user stats
       if (this.official) {
         await this.$store.dispatch('SubmitAttempt', "correct");
