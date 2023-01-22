@@ -1,7 +1,7 @@
 <template>
   <div class = "container" v-bind:style = "{minHeight: $store.getters.WindowHeight + 'px'}">
     <div class = "content">
-      <a href = "https://physicsgenie.ga/" id = "back-home">
+      <a href = "https://physicsgenie.org/" id = "back-home">
         <i class = "fa fa-caret-left" aria-hidden = "true"></i>
         <div class = "text">Back to Site</div>
       </a>

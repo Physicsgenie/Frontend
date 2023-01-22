@@ -67,14 +67,14 @@
       </div>
 
       <!-- Help (external) -->
-      <a href = "https://physicsgenie.ga/help" target = "_blank" class = "link-button">
+      <a href = "https://physicsgenie.org/help" target = "_blank" class = "link-button">
         <i class = "fa fa-question" aria-hidden = "true"></i>
         <div class = "text">Help</div>
       </a>
     </div>
 
     <!-- Back to main site (external) -->
-    <a href = "https://physicsgenie.ga/" id = "back-home" class = "link-button">
+    <a href = "https://physicsgenie.org/" id = "back-home" class = "link-button">
       <i class = "fa fa-long-arrow-left" aria-hidden = "true"></i>
       <div class = "text">Back to Site</div>
     </a>

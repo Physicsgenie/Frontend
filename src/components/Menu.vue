@@ -51,7 +51,7 @@
         </router-link>
 
         <!-- Help (external) -->
-        <a href = "https://physicsgenie.ga/help" target = "_blank" class = "router-link">
+        <a href = "https://physicsgenie.org/help" target = "_blank" class = "router-link">
           <div class = "img help">
             <i class = "fa fa-question" aria-hidden = "true"></i>
           </div>
@@ -60,7 +60,7 @@
       </div>
 
       <!-- Back to main site (external) -->
-      <a href = "https://physicsgenie.ga/" id = "back-home" class = "router-link">
+      <a href = "https://physicsgenie.org/" id = "back-home" class = "router-link">
         <i class = "fa fa-long-arrow-left" aria-hidden = "true"></i>
         <div class = "text">Back to Site</div>
       </a>
