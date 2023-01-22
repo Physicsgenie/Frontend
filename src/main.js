@@ -9,13 +9,13 @@ import VueMathfield from 'mathlive/dist/vue-mathlive';
 Vue.use(VueMathfield, MathLive);
 
 axios.defaults.withCredentials = true;
-axios.defaults.baseURL = 'https://physicsgenie.ga/staging/';
+axios.defaults.baseURL = 'https://physicsgenie.org/staging/';
 
 if (process.env.VUE_APP_DEBUG && process.env.VUE_APP_DEBUG === 'true') {
   console.log("Running on staging server");
-  axios.defaults.baseURL = 'https://physicsgenie.ga/staging/';
+  axios.defaults.baseURL = 'https://physicsgenie.org/staging/';
 } else {
-  axios.defaults.baseURL = 'https://physicsgenie.ga/';
+  axios.defaults.baseURL = 'https://physicsgenie.org/';
 }
 
 Vue.config.productionTip = false;
