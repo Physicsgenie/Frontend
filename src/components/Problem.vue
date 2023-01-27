@@ -346,7 +346,7 @@ export default {
         this.$store.commit('setProcessing', true);
 
         // Wolfram URL
-        const wolframURL = "https://www.wolframcloud.com/obj/bc0f749e-4cc3-48c4-b2e3-77021f07e315";
+        const wolframURL = "https://www.wolframcloud.com/obj/b8587876-288f-4097-9da5-4dd51849dfc6";
 
         // Encoded Mathematica request
         const request = encodeURI(wolframURL + "?studentAnswer=" + encodeURIComponent(self.currAnswer) + "&correctAnswer=" + encodeURIComponent(self.problem.answer) + "&error=" + self.problem.error + "&mustMatch=" + (self.problem.mustMatch ? "true" : "false"));
