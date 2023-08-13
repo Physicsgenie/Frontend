@@ -139,7 +139,16 @@ export default {
 
     // previewProblem (problem => problem to preview), sets current previewed problem to the one passed to this function
     previewProblem: function(problem) {
-      this.problemPreview = problem;
+      let problemText = problem.problemText;
+      if (problem.problemType === "mc" || problem.problemType === "ms") {
+        problemText += "|||||";
+        problem.mcOptions.forEach(function(option) {
+          problemText += "|||||" + option;
+        });
+      }
+
+      this.problemPreview = JSON.parse(JSON.stringify(problem));
+      this.problemPreview.problemText = problemText;
     },
 
     // edit (problemId => problem ID of problem to edit), goes to edit portal for problem with passed-in problem ID

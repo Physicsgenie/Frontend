@@ -24,7 +24,7 @@
       <!-- Home button -->
       <div class = "link-button home" v-on:click = "navigate('')">
         <div class = "logo"></div>
-        <div class = "text">Home</div>
+        <div class = "text">Dashboard</div>
       </div>
 
       <!-- Logout button -->
@@ -76,7 +76,7 @@
     <!-- Back to main site (external) -->
     <a href = "https://physicsgenie.org/" id = "back-home" class = "link-button">
       <i class = "fa fa-long-arrow-left" aria-hidden = "true"></i>
-      <div class = "text">Back to Site</div>
+      <div class = "text">Back to Home</div>
     </a>
   </div>
 </template>

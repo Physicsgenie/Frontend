@@ -39,12 +39,12 @@
       </div>
 
       <!-- Problem text -->
-      <p id = "problem-text"><vue-mathjax :formula = "problem.problemText" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></p>
+      <p id = "problem-text"><vue-mathjax :formula = "problemText" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></p>
 
       <!-- Diagram (only shows if diagram is non-null) -->
       <div id = "diagram" v-if = "problem.diagram !== null" v-html = "problem.diagram"></div>
 
-      <div class = "flex row problem">
+      <div v-if = "!multipleOptions" class = "flex row problem">
         <div id = "answer-container">
           <span class = "expecting">Expecting: {{ algebraicAnswer ? (problem.mustMatch ? "Exact algebraic expression (must match form exactly)" : "Algebraic expression (as simplified as possible)") : (problem.mustMatch ? "Exact numerical expression (must match both form and value exactly)" : (problem.error === "0" ? "Exact numerical answer" : "Numerical answer (must match value within a " + problem.error + "% error)")) }}</span>
         </div>
@@ -53,10 +53,18 @@
       <!-- Hints (only shows if no result) -->
       <div id = "hints">
         <!-- Hint one (only shows if at least one answer already submitted) -->
-        <p class = "hint one">Hint: <vue-mathjax v-bind:formula = "problem.hintOne" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></p>
+        <p class = "hint one" v-if = "problem.hintOne !== ''">Hint: <vue-mathjax v-bind:formula = "problem.hintOne" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></p>
 
         <!-- Hint two (only shows if hint two exists and if at least two answers already submitted) -->
-        <p class = "hint two" v-if = "problem.hintTwo !== null">Hint: <vue-mathjax v-bind:formula = "problem.hintTwo" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></p>
+        <p class = "hint two" v-if = "problem.hintTwo !== ''">Hint: <vue-mathjax v-bind:formula = "problem.hintTwo" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></p>
+      </div>
+
+      <!-- Multiple choice options -->
+      <div id = "mc-options">
+        <div v-for = "(option, index) in mcOptions" v-bind:key = "option" class = "option">
+          <div v-bind:class = "problem.problemType === 'mc' ? 'circle' : 'square'" class = "shape">{{ alphabet.charAt(index) }}</div>
+          <span><vue-mathjax :formula = "option" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></span>
+        </div>
       </div>
 
       <!-- Solution (only shows if result is showing) -->
@@ -96,7 +104,6 @@
 <script>
 
 // Imports
-import axios from 'axios';
 import {VueMathjax} from 'vue-mathjax'
 import { mapGetters } from "vuex";
 import ProgressBar from './ProgressBar';
@@ -121,6 +128,7 @@ export default {
     return {
       ordinalNumbers: ["First", "Second", "Third", "Fourth", "Fifth"],
       months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+      alphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
       wrong: false,
       mathInputFocusStyle: null,
       reportError: false,
@@ -132,6 +140,29 @@ export default {
       userStats: 'UserStats',
       submitData: 'ProblemMetaData'
     }),
+
+    // multipleOptions, true if problem type is mc (multiple choice) or ms (multiple select)
+    multipleOptions: function() {
+      return this.problem.problemType === "mc" || this.problem.problemType === "ms";
+    },
+
+    // problemText, creates problem text to be actually displayed
+    problemText: function() {
+      if (this.multipleOptions) {
+        return this.problem.problemText.split("||||||||||")[0];
+      } else {
+        return this.problem.problemText;
+      }
+    },
+
+    // mcOptions, creates multiple choice options from problem text
+    mcOptions: function() {
+      if (this.multipleOptions) {
+        return this.problem.problemText.split("||||||||||")[1].split("|||||");
+      } else {
+        return null;
+      }
+    },
 
     // otherFociList, creates "Also Includes: ..." string from otherFoci list
     otherFociList: function() {

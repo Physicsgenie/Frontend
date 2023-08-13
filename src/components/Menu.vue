@@ -7,7 +7,7 @@
         <!-- Home -->
         <router-link to = "/" class = "router-link">
           <div class = "img logo"></div>
-          <div class = "text">Home</div>
+          <div class = "text">Dashboard</div>
         </router-link>
 
         <!-- Play -->
@@ -62,7 +62,7 @@
       <!-- Back to main site (external) -->
       <a href = "https://physicsgenie.org/" id = "back-home" class = "router-link">
         <i class = "fa fa-long-arrow-left" aria-hidden = "true"></i>
-        <div class = "text">Back to Site</div>
+        <div class = "text">Back to Home</div>
       </a>
     </div>
 

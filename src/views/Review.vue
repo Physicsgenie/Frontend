@@ -9,8 +9,8 @@
     <div v-if = "problemPreview !== null" class = "preview" v-bind:style = "{height: $store.getters.WindowHeight + 'px'}">
       <div class = "preview-container">
         <!-- Reactivate Problem Button -->
-        <button v-on:click = "activateProblem(problemPreview)" class = "activate" v-if = "problemPreview.active"><i class = "fa fa-minus"></i><span>Deactivate Problem</span></button>
-        <button v-on:click = "activateProblem(problemPreview)" class = "activate" v-else><i class = "fa fa-plus"></i><span>Reactivate Problem</span></button>
+<!--        <button v-on:click = "activateProblem(problemPreview)" class = "activate" v-if = "problemPreview.active"><i class = "fa fa-minus"></i><span>Deactivate Problem</span></button>-->
+<!--        <button v-on:click = "activateProblem(problemPreview)" class = "activate" v-else><i class = "fa fa-plus"></i><span>Reactivate Problem</span></button>-->
 
         <div class = "view-box">
           <!-- Problem -->
@@ -26,8 +26,8 @@
     <div v-if = "problemReview !== null" class = "review preview" v-bind:style = "{height: $store.getters.WindowHeight + 'px'}">
       <div class = "preview-container">
         <!-- Reactivate Problem Button -->
-        <button v-on:click = "activateProblem(problemReview)" class = "activate" v-if = "problemReview.active"><i class = "fa fa-minus"></i><span>Deactivate Problem</span></button>
-        <button v-on:click = "activateProblem(problemReview)" class = "activate" v-else><i class = "fa fa-plus"></i><span>Reactivate Problem</span></button>
+<!--        <button v-on:click = "activateProblem(problemReview)" class = "activate" v-if = "problemReview.active"><i class = "fa fa-minus"></i><span>Deactivate Problem</span></button>-->
+<!--        <button v-on:click = "activateProblem(problemReview)" class = "activate" v-else><i class = "fa fa-plus"></i><span>Reactivate Problem</span></button>-->
 
         <div class = "view-box">
           <!-- Problem -->
@@ -108,7 +108,7 @@
 
             <!-- Problem Info -->
             <div class = "topic-focus"><span class = "topic">{{ problem.topic }}</span>><span class = "focus">{{ problem.mainFocus }}</span></div>
-            <div class = "problem-text"><vue-mathjax :formula = "viewType === 'list' ? problem.problemText : problem.problemTextShortened" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></div>
+            <div class = "problem-text"><vue-mathjax :formula = "viewType === 'list' ? ((problem.problemType === 'mc' || problem.problemType === 'ms') ? problem.problemText.split('||||||||||')[0] : problem.problemText) : problem.problemTextShortened" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></div>
             <div class = "info">
               <h6 class = "source">{{ problem.sourceName }}</h6>
               <div class = "difficulty">

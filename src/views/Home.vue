@@ -6,11 +6,6 @@
 
     <!-- Content -->
     <div class = "content">
-      <!-- Beta version popup -->
-      <div class = "box" id = "beta">
-        <p>Welcome to the first version of Physics Genie! We have only recently released it so you are among one of the first to use our physics learning platform. We would love to hear your feedback or about any bugs/errors you may experience, which you can relay to us through <a class = "link" href = "https://docs.google.com/forms/d/e/1FAIpQLSf362PWDUIZvtOHSaWGpeSdHx2373O3upKgtgBiVWu5FzBfBQ/viewform?usp=sf_link" target = "_blank">this form</a>. Again, thanks so much and enjoy!</p>
-      </div>
-
       <!-- Profile -->
       <div id = "profile" class = "box">
         <!-- Avatar -->
