@@ -1,8 +1,9 @@
 import Vuex from 'vuex';
 import Vue from 'vue';
-// import createPersistedState from "vuex-persistedstate";
 import auth from './modules/auth';
 import store from './modules/store';
+import largeStore from './modules/largeStore';
+import VuexPersistence from 'vuex-persist'
 
 // Load Vuex
 Vue.use(Vuex);
@@ -39,8 +40,8 @@ const Functions = store => {
 export default new Vuex.Store({
   modules: {
     auth,
-    store
+    store,
+    largeStore
   },
-  // plugins: [createPersistedState(), Functions]
-  plugins: [Functions]
+  plugins: [(new VuexPersistence({storage: window.localStorage, modules: ["auth", "store"]})).plugin, Functions]
 });
