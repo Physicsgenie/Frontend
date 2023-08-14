@@ -5,8 +5,6 @@ const state = {
   confirmations: [],
   windowHeight: null,
   windowWidth: null,
-  pastProblems: null,
-  submittedProblems: null,
   problemMetaData: null,
   userSetup: {
     difficulty: null,
@@ -109,8 +107,6 @@ const getters = {
   WindowHeight: state => state.windowHeight,
   WindowWidth: state => state.windowWidth,
   UserSetup: state => state.userSetup,
-  PastProblems: state => state.pastProblems,
-  SubmittedProblems: state => state.submittedProblems,
   UserStats: state => state.userStats,
   ProblemMetaData: state => state.problemMetaData,
   CurrSubmission: state => state.currSubmission,
@@ -160,7 +156,6 @@ const actions = {
       if (getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === data.source}).length > 0) {
         source = getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === data.source})[0];
       }
-
 
       commit('setCurrProblem', {
         problemID: data.problem_id,
@@ -212,6 +207,10 @@ const actions = {
       for (let i = 0; i < problems.length; i++) {
         let problemTextShortened = problems[i].problem_text.replace(/\\\\/g, "\\").replace(/\\"/g, "'");
 
+        if (problems[i].problem_type === "mc" || problems[i].problem_type === "ms") {
+          problemTextShortened = problemTextShortened.split("||||||||||")[0];
+        }
+
         if (problemTextShortened.length > 200) {
           problemTextShortened = problemTextShortened.slice(0, 200);
           if ((problemTextShortened.match(/\$/g)||[]).length % 2 === 1) {
@@ -257,7 +256,7 @@ const actions = {
           active: problems[i].active
         };
       }
-      commit('setPastProblems', problems)
+      commit('setPastProblems', problems, {root: true})
     });
   },
   async GetSubmittedProblems({commit, getters}) {
@@ -285,9 +284,11 @@ const actions = {
           sourceName = getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === problems[i].source})[0].source;
         }
 
+        let problemText = problems[i].problem_text.replace(/\\\\/g, "\\").replace(/\\"/g, "'");
+
         problems[i] = {
           problemID: problems[i].problem_id,
-          problemText: problems[i].problem_text.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+          problemText: problemText.split("||||||||||")[0],
           problemTextShortened: problemTextShortened,
           diagram: (problems[i].diagram === null) ? null : problems[i].diagram.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
           answer: problems[i].answer.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
@@ -308,10 +309,10 @@ const actions = {
           problemErrors: problems[i].problem_errors,
           problemType: problems[i].problem_type,
           resources: problems[i].resources,
-          mcOptions: problems[i].problemType === "sa" ? ["", "", "", ""] : problemText.split("||||||||||")[1].split("|||||")
+          mcOptions: problems[i].problem_type === "sa" ? ["", "", "", ""] : problemText.split("||||||||||")[1].split("|||||")
         };
       }
-      commit('setSubmittedProblems', problems)
+      commit('setSubmittedProblems', problems, {root: true})
     });
   },
   async SubmitProblem({commit, getters}) {
@@ -460,16 +461,6 @@ const actions = {
       });
     });
   },
-  // async SubmitAttempt({getters}, result) {
-  //   await axios.post("wp-json/physics_genie/submit-attempt", JSON.stringify({
-  //     problem_id: getters.CurrProblem.problemID,
-  //     num_attempts: getters.PastAnswers.length,
-  //     correct: result === "correct" ? "true" : "false",
-  //     topic: getters.CurrProblem.topic,
-  //     focus: getters.CurrProblem.mainFocus,
-  //     difficulty: getters.CurrProblem.difficulty,
-  //   }), {'Content-Type': 'application/json', headers: {'Authorization': 'Bearer ' + getters.Token}});
-  // }
 };
 const mutations = {
   setProcessing(state, processing) {
@@ -503,12 +494,6 @@ const mutations = {
   },
   setUserStats(state, stats) {
     state.userStats = stats;
-  },
-  setPastProblems(state, problems) {
-    state.pastProblems = problems;
-  },
-  setSubmittedProblems(state, problems) {
-    state.submittedProblems = problems;
   },
   setCurrSubmission(state, currSubmission) {
     state.currSubmission = currSubmission;

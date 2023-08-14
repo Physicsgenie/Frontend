@@ -323,7 +323,7 @@
             <select id = "source" name = "source" v-bind:style = "(currSubmission.source !== '') ? {color: 'black'} : {color: '#929292'}" v-on:change = "function(event) {setCurrSubmissionField('source', event.target.value)}">
               <option disabled selected value> -- Select a Source -- </option>
               <optgroup v-for = "category in submitData.source_categories" v-bind:key = "category.category" v-bind:label = "category.category">
-                <option v-for = "source in submitData.sources.filter(function(sourceComparator) {return sourceComparator.category === category.category})" v-bind:key = "source.source" v-bind:selected = "source.source_id === currSubmission.source" v-bind:value = "source.source_id">{{ source.source }} ({{ source.author }})</option>
+                <option v-for = "source in submitData.sources.filter(function(sourceComparator) {return sourceComparator.category === category.category})" v-bind:key = "source.source_id" v-bind:selected = "source.source_id === currSubmission.source" v-bind:value = "source.source_id">{{ source.source }} ({{ source.author }})</option>
               </optgroup>
               <option v-bind:value = "'other'" id = "source-other-option" v-bind:selected = "currSubmission.source === 'other'">Other...</option>
             </select>
@@ -443,7 +443,6 @@ export default {
       errors: [],
       alphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
       difficultyHover: null,
-      submitData: this.$store.getters.ProblemMetaData,
       problemPreview: null,
       addressingErrorsPopup: false
     }
@@ -465,6 +464,10 @@ export default {
           this.$store.commit('setCurrSubmissionEdit', value);
         }
       }
+    },
+
+    submitData: function() {
+      return this.$store.getters.ProblemMetaData;
     },
 
     // algebraicAnswer, returns boolean testing whether or not the problem's answer is algebraic or not
@@ -800,7 +803,9 @@ export default {
 
         // Reset fields based on getting problem data as stored in SubmittedProblems object
         if (this.$route.params.id !== undefined) {
+          console.log("here");
           let problem = this.$store.getters.SubmittedProblems.filter(function(problem) {return problem.problemID === self.$route.params.id})[0];
+          console.log("I go tot");
           let otherFoci = [];
           problem.otherFoci.forEach(function(otherFocus) {
             otherFoci.push(self.submitData.focuses.filter(function(focus) {return focus.name === otherFocus})[0].focus);
@@ -829,7 +834,7 @@ export default {
             category: "",
             author: "",
             sourceOther: "",
-            problemNumber: problem.numberInSource,
+            problemNumber: problem.problemNumber,
             difficulty: problem.difficulty,
             calculus: problem.calculus,
             problemType: "sa",

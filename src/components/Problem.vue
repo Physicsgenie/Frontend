@@ -56,7 +56,7 @@
       <div id = "diagram" v-if = "problem.diagram !== null" v-html = "problem.diagram"></div>
 
       <!-- Hints (only shows if no result) -->
-      <div id = "hints" v-if = "result === ''">
+      <div id = "hints" v-if = "result === ''" v-bind:style = "multipleOptions ? {marginBottom: '20px'} : ''">
         <!-- Hint one (only shows if at least one answer already submitted) -->
         <p class = "hint one" v-if = "pastAnswers.length >= 1 && problem.hintOne !== ''">Hint: <vue-mathjax v-bind:formula = "problem.hintOne" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></p>
 
@@ -78,8 +78,8 @@
       </div>
 
       <!-- Problem answer (only shows if no result) -->
-      <div class = "flex row problem" v-if = "result === ''" v-bind:style = "multipleOptions ? {justifyContent: 'center'} : ''">
-        <div id = "answer-container">
+      <div class = "flex row problem" v-if = "result === ''" v-bind:style = "multipleOptions ? {justifyContent: 'center', marginTop: '0'} : ''">
+        <div v-if = "!multipleOptions" id = "answer-container">
           <!-- Answer field -->
           <mathlive-mathfield class = "math-input" virtual-keyboard-mode = "auto" v-on:focus = "mathInputFocusStyle = [{boxShadow: '0 0 10px 0 rgba(40, 46, 91, 0.4)'}]" v-on:blur = "mathInputFocusStyle = null" v-bind:style = "mathInputFocusStyle" v-model = "currAnswer"></mathlive-mathfield>
 
@@ -392,7 +392,7 @@ export default {
         this.$store.commit('setProcessing', true);
 
         // Wolfram URL
-        const wolframURL = "https://www.wolframcloud.com/obj/5af954b8-6910-4e1c-9751-2ee35529ac2f";
+        const wolframURL = "https://www.wolframcloud.com/obj/b4d67aa8-1806-4c7b-9004-b13080a1e661";
 
         // Encoded Mathematica request
         const request = encodeURI(wolframURL + "?studentAnswer=" + encodeURIComponent(self.currAnswer) + "&correctAnswer=" + encodeURIComponent(self.problem.answer) + "&error=" + self.problem.error + "&mustMatch=" + (self.problem.mustMatch ? "true" : "false"));
@@ -455,7 +455,7 @@ export default {
       // Add incorrect answer to previous answers list
       this.pastAnswers.push(this.currAnswer);
 
-      // If problem is an official attempt then submit the attempt and update user stats
+      // If problem is an official attempt then submit the attempt
       if (this.official) {
         await axios.post("wp-json/physics_genie/submit-attempt", JSON.stringify({problem_id: this.problem.problemID, student_answer: this.currAnswer, correct: false, give_up: false}), {headers: {"Content-Type": "application/json", 'Authorization': 'Bearer ' + this.$store.getters.Token}});
       }
@@ -472,7 +472,7 @@ export default {
         // Set result
         this.result = "incorrect";
 
-        // If problem is an official attempt then submit the attempt and update user stats
+        // If problem is an official attempt then update user stats
         if (this.official) {
           await this.$store.dispatch('GetUserStats');
           await this.$store.dispatch('GetPastProblems');
@@ -512,6 +512,7 @@ export default {
         this.$store.commit('setProcessing', true);
         // API PUT request /reset-curr-problem to ensure database deletes record of current problem
         await axios.put("wp-json/physics_genie/reset-curr-problem", null, {headers: {'Authorization': 'Bearer ' + this.$store.getters.Token}});
+        // let _lsTotal=0,_xLen,_x;for(_x in window.localStorage){ if(! window.localStorage.hasOwnProperty(_x)){continue;} _xLen= (( window.localStorage[_x].length + _x.length)* 2);_lsTotal+=_xLen; console.log(_x.substr(0,50)+" = "+ (_xLen/1024).toFixed(2)+" KB")};console.log("Total = " + (_lsTotal / 1024).toFixed(2) + " KB");
         await this.$store.dispatch('GetCurrProblem');
         this.$store.commit('setProcessing', false);
       }
@@ -720,10 +721,10 @@ export default {
   }
 
 
-  /* Hints, student previous answes, problem text and button styling */
+  /* Hints, student previous answers, problem text and button styling */
   #hints {
     margin-top: 10px;
-    margin-bottom: 50px;
+    margin-bottom: 20px;
   }
 
   #student-answers .incorrect {
@@ -742,6 +743,7 @@ export default {
     display: flex;
     flex-direction: row;
     align-items: center;
+    margin-top: 40px;
   }
 
   #problem-text {
@@ -753,6 +755,53 @@ export default {
   #diagram {
     width: 100%;
     overflow: auto;
+  }
+
+  /* Multiple Choice */
+  #mc-options .option {
+    font-size: 13px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    color: #0e5481;
+    cursor: pointer;
+    padding: 12px 0 12px 25px;
+    border-radius: 5px;
+    transition: background .3s ease, padding .3s ease;
+    margin: 1px 0;
+  }
+
+  #mc-options .option:hover {
+    background: rgba(55, 128, 189, 0.1);
+    padding-left: 35px;
+  }
+
+  #mc-options .option.active .shape {
+    background: #0e5481;
+    color: white;
+  }
+
+  #mc-options .shape {
+    width: 20px;
+    height: 20px;
+    font-size: 11px;
+    background: transparent;
+    border: 2px solid #0e5481;
+    display: inline-block;
+    margin-right: 10px;
+    text-align: center;
+    line-height: 20px;
+    vertical-align: middle;
+    transition: background .3s ease, color .3s ease;
+  }
+
+  #mc-options .circle {
+    border-radius: 50%;
+  }
+
+  #mc-options .square {
+    border-radius: 3px;
   }
 
   .flex.problem .buttons {

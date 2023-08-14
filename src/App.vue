@@ -40,14 +40,15 @@
           }
         }
 
-        let storageInMB = (3 + allStrings.length / 512) / 1024;
-        if (storageInMB >= 5) {
+        let storageInKB = (3 + allStrings.length / 512);
+        if (storageInKB >= 500) {
           window.localStorage.clear();
         }
       },
 
       // async getData, Calls store actions to retrieve current user's stats+data
       getData: async function() {
+        console.log("hello");
         const getProblemMetadata = this.$store.dispatch('GetProblemMetadata');
         const getUserMetadata =  this.$store.dispatch('GetUserMetadata');
         const getUserInfo = this.$store.dispatch('GetUserInfo');

@@ -50,12 +50,12 @@
         </div>
       </div>
 
-      <!-- Hints (only shows if no result) -->
-      <div id = "hints">
-        <!-- Hint one (only shows if at least one answer already submitted) -->
+      <!-- Hints -->
+      <div id = "hints" v-bind:style = "multipleOptions ? {marginBottom: '20px'} : ''">
+        <!-- Hint one -->
         <p class = "hint one" v-if = "problem.hintOne !== ''">Hint: <vue-mathjax v-bind:formula = "problem.hintOne" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></p>
 
-        <!-- Hint two (only shows if hint two exists and if at least two answers already submitted) -->
+        <!-- Hint two -->
         <p class = "hint two" v-if = "problem.hintTwo !== ''">Hint: <vue-mathjax v-bind:formula = "problem.hintTwo" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></p>
       </div>
 
@@ -67,7 +67,7 @@
         </div>
       </div>
 
-      <!-- Solution (only shows if result is showing) -->
+      <!-- Solution -->
       <div id = "solution">
         <!-- Student previous answers -->
         <div id = "student-answers">
@@ -78,7 +78,7 @@
           </div>
         </div>
 
-        <!-- Answer (does not show if result is correct since then it is already shown in student previous answers) -->
+        <!-- Answer -->
         <div id = "answer">Answer: <vue-mathjax class = "correct"  v-bind:formula = "'$' + problem.answer + '$'" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></div>
 
         <!-- Solution text -->
@@ -444,6 +444,53 @@ export default {
   #diagram {
     width: 100%;
     overflow: auto;
+  }
+
+  /* Multiple Choice */
+  #mc-options .option {
+    font-size: 13px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    color: #0e5481;
+    cursor: pointer;
+    padding: 12px 0 12px 25px;
+    border-radius: 5px;
+    transition: background .3s ease, padding .3s ease;
+    margin: 1px 0;
+  }
+
+  #mc-options .option:hover {
+    background: rgba(55, 128, 189, 0.1);
+    padding-left: 35px;
+  }
+
+  #mc-options .option.active .shape {
+    background: #0e5481;
+    color: white;
+  }
+
+  #mc-options .shape {
+    width: 20px;
+    height: 20px;
+    font-size: 11px;
+    background: transparent;
+    border: 2px solid #0e5481;
+    display: inline-block;
+    margin-right: 10px;
+    text-align: center;
+    line-height: 20px;
+    vertical-align: middle;
+    transition: background .3s ease, color .3s ease;
+  }
+
+  #mc-options .circle {
+    border-radius: 50%;
+  }
+
+  #mc-options .square {
+    border-radius: 3px;
   }
 
   .flex.problem .buttons {

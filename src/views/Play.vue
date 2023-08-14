@@ -129,6 +129,8 @@
               resources: data.resources,
               completed: data.active
             };
+
+            console.log(self.problem);
           }
         });
       }
