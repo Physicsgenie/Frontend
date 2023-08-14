@@ -84,8 +84,31 @@
 
           <!-- Problem Text Input -->
           <div class = "input-container">
-            <textarea type = "text" id = "problem-text" name = "problem-text" v-model = "currSubmission.problemText"></textarea>
+            <textarea id = "problem-text" name = "problem-text" v-model = "currSubmission.problemText"></textarea>
             <button class = "expand problem-text" v-on:click = "fullEditSet('problemText')"><i class = "fa fa-reply"></i>Edit Full Screen</button>
+
+            <!-- Problem Type Selector ("Short Answer" or "Multiple Choice") -->
+            <div class = "selector-buttons problem-type" v-bind:style = "{marginTop: '30px'}">
+              <div class = "indicator" v-bind:style = "(currSubmission.problemType === 'sa') ? {left: '0'} : ((currSubmission.problemType === 'mc') ? {left: '33%'} : {left: '66%'})"><div></div></div>
+              <button class = "short-answer" v-bind:class = "{active: (currSubmission.problemType === 'sa')}" v-on:click = "setCurrSubmissionField('problemType', 'sa')">Short Answer</button>
+              <button class = "multiple-choice" v-bind:class = "{active: (currSubmission.problemType === 'mc')}" v-on:click = "setCurrSubmissionField('problemType', 'mc')">Multiple Choice</button>
+              <button class = "multiple-select" v-bind:class = "{active: (currSubmission.problemType === 'ms')}" v-on:click = "setCurrSubmissionField('problemType', 'ms')">Multiple Select</button>
+            </div>
+          </div>
+
+          <!-- Multiple Choice Options -->
+          <div class = "input-container mc-options-outer" v-if = "currSubmission.problemType === 'mc' || currSubmission.problemType === 'ms'">
+            <h6>Multiple {{ currSubmission.problemType === "mc" ? "Choice" : "Select" }} Options</h6>
+
+            <!-- Options -->
+            <div v-for = "(_, index) in currSubmission.mcOptions" class = "mc-option" v-bind:key = "index">
+              <span>{{ alphabet.charAt(index) }}:</span>
+              <input type = "text" v-model = "currSubmission.mcOptions[index]">
+              <i class = "fa fa-times" style = "color: red; cursor: pointer;" v-on:click = "removeMCOption(index)"></i>
+            </div>
+
+            <!-- Add Options Button -->
+            <button v-on:click = "addMCOption" class = "add-option"><i class = "fa fa-plus"></i>Add Option</button>
           </div>
 
           <!-- Problem Diagram Input -->
@@ -125,8 +148,20 @@
 
           <!-- Hint One Input -->
           <div class = "input-container">
+            <!-- Input Label -->
             <h6>Hint One</h6>
-            <input type = "text" id = "hint-one" name = "hint-one" v-model = "currSubmission.hintOne">
+
+            <!-- Hint One Type Selector ("Include" or "None") -->
+            <div class = "selector-buttons hint-one hint">
+              <div class = "indicator" v-bind:style = "currSubmission.hintOneInclude ? {left: '0'} : {left: '50%'}"><div></div></div>
+              <button class = "include" v-bind:class = "{active: currSubmission.hintOneInclude}" v-on:click = "setCurrSubmissionField('hintOneInclude', true)">Include</button>
+              <button class = "none" v-bind:class = "{active: !currSubmission.hintOneInclude}" v-on:click = "setCurrSubmissionField('hintOneInclude', false)">None</button>
+            </div>
+
+            <!-- Hint One Include Option -->
+            <div class = "flex-options hint-one hint" v-if = "currSubmission.hintOneInclude">
+              <input type = "text" id = "hint-one" name = "hint-one" v-model = "currSubmission.hintOne">
+            </div>
           </div>
 
           <!-- Hint Two Input -->
@@ -191,7 +226,7 @@
           <!-- Solution Input -->
           <div class = "input-container solution">
             <h6>Solution <span class = "smaller">(LaTeX)</span></h6>
-            <textarea type = "text" id = "solution" name = "solution" v-model = "currSubmission.solution"></textarea>
+            <textarea id = "solution" name = "solution" v-model = "currSubmission.solution"></textarea>
             <button class = "expand solution" v-on:click = "fullEditSet('solution')"><i class = "fa fa-reply"></i>Edit Full Screen</button>
           </div>
 
@@ -288,7 +323,7 @@
             <select id = "source" name = "source" v-bind:style = "(currSubmission.source !== '') ? {color: 'black'} : {color: '#929292'}" v-on:change = "function(event) {setCurrSubmissionField('source', event.target.value)}">
               <option disabled selected value> -- Select a Source -- </option>
               <optgroup v-for = "category in submitData.source_categories" v-bind:key = "category.category" v-bind:label = "category.category">
-                <option v-for = "source in submitData.sources.filter(function(sourceComparator) {return sourceComparator.category === category.category})" v-bind:key = "source.source" v-bind:selected = "source.source_id === currSubmission.source" v-bind:value = "source.source_id">{{ source.source }} ({{ source.author }})</option>
+                <option v-for = "source in submitData.sources.filter(function(sourceComparator) {return sourceComparator.category === category.category})" v-bind:key = "source.source_id" v-bind:selected = "source.source_id === currSubmission.source" v-bind:value = "source.source_id">{{ source.source }} ({{ source.author }})</option>
               </optgroup>
               <option v-bind:value = "'other'" id = "source-other-option" v-bind:selected = "currSubmission.source === 'other'">Other...</option>
             </select>
@@ -359,6 +394,14 @@
               <button class = "required" v-bind:class = "{active: (currSubmission.calculus === 'Required')}" v-on:click = "setCurrSubmissionField('calculus', 'Required')">Required</button>
             </div>
           </div>
+
+          <!-- Resources Input -->
+          <div class = "input-container resources">
+            <h6>Resources <span class = "smaller">(LaTeX)</span></h6>
+            <textarea id = "resources" name = "resources" v-model = "currSubmission.resources"></textarea>
+            <button class = "expand resources" v-on:click = "fullEditSet('resources')"><i class = "fa fa-reply"></i>Edit Full Screen</button>
+          </div>
+
         </div>
 
         <!-- Buttons -->
@@ -398,8 +441,8 @@ export default {
       },
       mathInputFocusStyle: null,
       errors: [],
+      alphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
       difficultyHover: null,
-      submitData: this.$store.getters.ProblemMetaData,
       problemPreview: null,
       addressingErrorsPopup: false
     }
@@ -421,6 +464,10 @@ export default {
           this.$store.commit('setCurrSubmissionEdit', value);
         }
       }
+    },
+
+    submitData: function() {
+      return this.$store.getters.ProblemMetaData;
     },
 
     // algebraicAnswer, returns boolean testing whether or not the problem's answer is algebraic or not
@@ -464,18 +511,30 @@ export default {
         this.errors.push("Please enter the problem text (latex)");
       }
 
+      if (this.currSubmission.problemType === "mc" || this.currSubmission.problemType === "ms") {
+        let empty = false;
+        this.currSubmission.mcOptions.forEach(function(option) {
+          if (option === "") {
+            empty = true;
+          }
+        });
+        if (empty) {
+          this.errors.push("Please enter something for all the multiple choice options or switch the problem to short answer");
+        }
+      }
+
       if (this.currSubmission.diagramType === "file" && this.currSubmission.diagramFile === null) {
         this.errors.push("Please upload a non-empty .svg diagram file or select a different diagram option");
       } else if (this.currSubmission.diagramType === "code" && this.currSubmission.diagram === "") {
         this.errors.push("Please enter the diagram svg markup code or select a different diagram option");
       }
 
-      if (this.currSubmission.hintOne === "") {
-        this.errors.push("Please enter the first hint");
+      if (this.currSubmission.hintOneInclude && this.currSubmission.hintOne === "") {
+        this.errors.push("Please enter the second hint or set it to \"none\"");
       }
 
-      if (this.currSubmission.hintTwoInclude && this.currSubmission.hintTwo === "") {
-        this.errors.push("Please enter the second hint or set it to \"none\"");
+      if (this.currSubmission.hintOneInclude && this.currSubmission.hintOne === "") {
+        this.errors.push("Please enter the first hint or set it to \"none\"");
       }
 
       if (this.currSubmission.answer === "") {
@@ -520,18 +579,18 @@ export default {
           await this.$store.dispatch('SubmitProblem');
           await this.$store.dispatch('GetProblemMetadata');
           await this.$store.dispatch('GetSubmittedProblems');
-          this.$store.dispatch('Confirmation', "Problem successfully submitted");
+          await this.$store.dispatch('Confirmation', "Problem successfully submitted");
           this.$store.commit('setProcessing', false);
-          this.$router.push("/submit");
+          await this.$router.push("/submit");
           window.scrollTo({top: 0, left: 0});
         } else if (this.currSubmission.problemErrors.filter(function(error) {return error.addressed === '0'}).length === 0 || this.addressingErrorsPopup) {
           await this.$store.dispatch('EditProblem');
           await this.$store.dispatch('GetProblemMetadata');
           await this.$store.dispatch('GetSubmittedProblems');
-          this.$store.dispatch('Confirmation', "Problem successfully edited");
+          await this.$store.dispatch('Confirmation', "Problem successfully edited");
           this.$store.commit('setProcessing', false);
           this.addressingErrorsPopup = false;
-          this.$router.push("/submit");
+          await this.$router.push("/submit");
           window.scrollTo({top: 0, left: 0});
         } else {
           this.addressingErrorsPopup = true;
@@ -681,6 +740,20 @@ export default {
       this.currSubmission.otherFoci.splice(index, 1);
     },
 
+    // addMCOption, adds option to mcOptions list
+    addMCOption: function() {
+      this.currSubmission.mcOptions.push("");
+    },
+
+    // removeMCOption (index => option index in mcOptions array), removes option from mcOptions list
+    removeMCOption: function(index) {
+      if (this.currSubmission.mcOptions.length > 2) {
+        this.currSubmission.mcOptions.splice(index, 1);
+      } else {
+        this.$store.dispatch('Confirmation', "You must have at least two multiple choice options");
+      }
+    },
+
     // clear, clears all inputs after prompting the user to confirm this action (only an option if new submission)
     clear: function() {
       if (confirm("Are you sure you would like to clear the current submission? This cannot be undone")) {
@@ -691,8 +764,9 @@ export default {
           diagramFile: null,
           diagramType: "file",
           hintOne: "",
+          hintOneInclude: true,
           hintTwo: "",
-          hintTwoInclude: true,
+          hintTwoInclude: false,
           answer: "",
           mustMatch: false,
           error: 5,
@@ -709,7 +783,11 @@ export default {
           sourceOther: "",
           problemNumber: "",
           difficulty: null,
-          calculus: "None"
+          calculus: "None",
+          problemType: "sa",
+          mcOptions: ["", "", "", ""],
+          resources: ""
+
         };
         window.scrollTo({top: 0, left: 0});
       }
@@ -725,7 +803,9 @@ export default {
 
         // Reset fields based on getting problem data as stored in SubmittedProblems object
         if (this.$route.params.id !== undefined) {
+          console.log("here");
           let problem = this.$store.getters.SubmittedProblems.filter(function(problem) {return problem.problemID === self.$route.params.id})[0];
+          console.log("I go tot");
           let otherFoci = [];
           problem.otherFoci.forEach(function(otherFocus) {
             otherFoci.push(self.submitData.focuses.filter(function(focus) {return focus.name === otherFocus})[0].focus);
@@ -737,8 +817,9 @@ export default {
             diagramFile: null,
             diagramType: problem.diagram === null ? "none" : "code",
             hintOne: problem.hintOne,
-            hintTwo: problem.hintTwo === null ? "": problem.hintTwo,
-            hintTwoInclude: problem.hintTwo !== null,
+            hintOneInclude: problem.hintOne !== "",
+            hintTwo: problem.hintTwo,
+            hintTwoInclude: problem.hintTwo !== "",
             answer: problem.answer,
             mustMatch: problem.mustMatch,
             error: problem.error,
@@ -753,9 +834,12 @@ export default {
             category: "",
             author: "",
             sourceOther: "",
-            problemNumber: problem.numberInSource,
+            problemNumber: problem.problemNumber,
             difficulty: problem.difficulty,
-            calculus: problem.calculus
+            calculus: problem.calculus,
+            problemType: "sa",
+            mcOptions: ["", "", "", ""],
+            resources: ""
           };
         }
 
@@ -812,6 +896,17 @@ export default {
         this.problemPreview.source = {source: self.problemPreview.sourceOther, author: self.problemPreview.author};
       }
 
+      // Append multiple choice options to problem text string if relevant
+      let problemText = this.currSubmission.problemText;
+      if (this.currSubmission.problemType === "mc" || this.currSubmission.problemType === "ms") {
+        problemText += "|||||";
+        this.currSubmission.mcOptions.forEach(function(option) {
+          problemText += "|||||" + option;
+        });
+      }
+
+      this.problemPreview.problemText = problemText;
+
     }
   },
   mounted() {
@@ -826,8 +921,9 @@ export default {
         diagramFile: null,
         diagramType: problem.diagram === null || problem.diagram === "" ? "none" : "code",
         hintOne: problem.hintOne,
-        hintTwo: problem.hintTwo === null || problem.hintTwo === "" ? "": problem.hintTwo,
-        hintTwoInclude: problem.hintTwo !== null,
+        hintOneInclude: problem.hintOne !== "",
+        hintTwo: problem.hintTwo,
+        hintTwoInclude: problem.hintTwo !== "",
         answer: problem.answer,
         mustMatch: problem.mustMatch,
         error: problem.error,
@@ -845,7 +941,10 @@ export default {
         problemNumber: problem.problemNumber,
         difficulty: problem.difficulty,
         calculus: problem.calculus,
-        problemErrors: problem.problemErrors
+        problemErrors: problem.problemErrors,
+        problemType: problem.problemType,
+        mcOptions: problem.mcOptions,
+        resources: problem.resources
       };
       for (let i = 0; i < problem.problemErrors.length; i++) {
         this.currSubmission.problemErrors[i].addressedState = 0;
@@ -1299,6 +1398,57 @@ h3:before {
   background: rgba(235, 235, 235, 0.3);
 }
 
+/* MC Options styling */
+.mc-options-outer button {
+  background: none;
+  border: 1px solid #285380;
+  border-radius: 15px;
+  cursor: pointer;
+  padding: 5px 10px;
+  color: #285380;
+  width: auto;
+  margin-top: 5px;
+  transition: font-weight .2s ease;
+}
+
+.mc-options-outer button .fa {
+  margin-right: 5px;
+}
+
+.mc-options-outer button:hover {
+  font-weight: 900;
+}
+
+.mc-option {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 15px;
+  border-radius: 15px;
+  margin: 2px 0 5px 0;
+  width: 90%;
+  transition: box-shadow .3s ease;
+}
+
+.mc-option:hover {
+  box-shadow: 0 0 10px 0 rgba(100, 100, 100, 0.5);
+}
+
+.mc-option span {
+  font-family: "Montserrat", sans-serif;
+  padding: 0 10px 0 10px;
+}
+
+.mc-option input {
+  height: 30px;
+  margin-right: 10px;
+  font-size: 12px;
+  color: rgb(100, 100, 100);
+  border: 1px solid rgb(155, 155, 155);
+  outline: none;
+}
+
 /* Diagram and solution diagram options styling */
 .diagram.flex-options {
   display: flex;
@@ -1397,15 +1547,15 @@ h3:before {
   color: white;
 }
 
-/* Hint two options styling */
-.hint-two.flex-options {
+/* Hint options styling */
+.hint.flex-options {
   display: flex;
   margin-top: 15px;
   flex-direction: column;
   align-items: stretch;
 }
 
-.hint-two.flex-options > input {
+.hint.flex-options > input {
   height: inherit;
   overflow: hidden;
   padding: 10px;
@@ -1689,11 +1839,11 @@ h3:before {
   height: 25px;
 }
 
-.input-container .selector-buttons.hint-two .indicator, .input-container .selector-buttons.student-answer .indicator {
+.input-container .selector-buttons.hint .indicator, .input-container .selector-buttons.student-answer .indicator {
   width: 50%;
 }
 
-.input-container .hint-two .indicator div, .input-container .student-answer .indicator div {
+.input-container .hint .indicator div, .input-container .student-answer .indicator div {
   width: 170px;
 }
 

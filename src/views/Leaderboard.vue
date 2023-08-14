@@ -87,7 +87,7 @@
             <div class = "cell" v-for = "(entry, index) in leaderboardDataFiltered" v-bind:key = "entry.user">
                 <div class = "user"><h3><span>{{ index + 1 }}</span>{{ entry.user }}</h3></div>
                 <div style = "width: 10%"><h3>{{ Math.floor(Math.sqrt(entry.xp+9))-2 }}</h3></div>
-                <div style = "width: 10%"><h3>{{ entry.xp }}</h3></div>
+                <div style = "width: 10%"><h3>{{ Math.round(entry.xp * 100) / 100 }}</h3></div>
                 <div style = "width: 20%" v-if = "type === 0 || type === 1"><h3>{{ entry.num_presented }}</h3></div>
                 <div style = "width: 20%" v-if = "type === 0 || type === 1"><h3>{{ entry.num_correct }}</h3></div>
                 <div style = "width: 20%" v-if = "type === 2"><h3>{{ streakType === "longest_streak" ? entry.longest_winstreak : entry.streak }}</h3></div>

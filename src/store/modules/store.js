@@ -5,8 +5,6 @@ const state = {
   confirmations: [],
   windowHeight: null,
   windowWidth: null,
-  pastProblems: null,
-  submittedProblems: null,
   problemMetaData: null,
   userSetup: {
     difficulty: null,
@@ -24,7 +22,7 @@ const state = {
     error: 5,
     solution: "",
     hintOne: "",
-    hintTwo: null,
+    hintTwo: "",
     difficulty: null,
     topic: "",
     topicName: "",
@@ -33,7 +31,9 @@ const state = {
     otherFoci: [],
     source: "",
     problemNumber: "",
-    completed: false
+    completed: false,
+    problemType: "sa",
+    resources: ""
   },
   currSubmission: {
     problemID: null,
@@ -42,8 +42,9 @@ const state = {
     diagramFile: null,
     diagramType: "file",
     hintOne: "",
+    hinOneInclude: true,
     hintTwo: "",
-    hintTwoInclude: true,
+    hintTwoInclude: false,
     answer: "",
     mustMatch: false,
     error: 5,
@@ -60,7 +61,10 @@ const state = {
     sourceOther: "",
     problemNumber: "",
     difficulty: null,
-    calculus: "None"
+    calculus: "None",
+    problemType: "sa",
+    resources: "",
+    mcOptions: ["", "", "", ""]
   },
   currSubmissionEdit: {
     problemID: null,
@@ -69,8 +73,9 @@ const state = {
     diagramFile: null,
     diagramType: "file",
     hintOne: "",
+    hintOneInclude: true,
     hintTwo: "",
-    hintTwoInclude: true,
+    hintTwoInclude: false,
     answer: "",
     mustMatch: false,
     error: 5,
@@ -87,7 +92,10 @@ const state = {
     sourceOther: "",
     problemNumber: "",
     difficulty: null,
-    calculus: "None"
+    calculus: "None",
+    problemType: "sa",
+    resources: "",
+    mcOptions: ["", "", "", ""]
   },
   pastAnswers: [],
   result: "",
@@ -99,8 +107,6 @@ const getters = {
   WindowHeight: state => state.windowHeight,
   WindowWidth: state => state.windowWidth,
   UserSetup: state => state.userSetup,
-  PastProblems: state => state.pastProblems,
-  SubmittedProblems: state => state.submittedProblems,
   UserStats: state => state.userStats,
   ProblemMetaData: state => state.problemMetaData,
   CurrSubmission: state => state.currSubmission,
@@ -151,7 +157,6 @@ const actions = {
         source = getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === data.source})[0];
       }
 
-
       commit('setCurrProblem', {
         problemID: data.problem_id,
         problemText: data.problem_text.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
@@ -162,7 +167,7 @@ const actions = {
         solution: data.solution.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
         solutionDiagram: (data.solution_diagram === null) ? null : data.solution_diagram.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
         hintOne: data.hint_one.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
-        hintTwo: (data.hint_two === null) ? null : data.hint_two.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+        hintTwo: data.hint_two.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
         difficulty: data.difficulty,
         topic: data.topic,
         mainFocus: data.main_focus,
@@ -170,8 +175,25 @@ const actions = {
         source: source,
         problemNumber: data.number_in_source,
         problemErrors: data.problem_errors,
+        problemType: data.problem_type,
+        resources: data.resources,
         completed: data.active
       });
+
+      // Get past answers from current attempt
+      let pastAnswers = [];
+
+      data.attempts.sort(function(a, b) {return (new Date(b.date_attempted)).getTime() - (new Date(a.date_attempted)).getTime()});
+
+      for (let i = 0; i < data.attempts.length; i++) {
+        if (data.attempts[i].correct === "1" || data.attempts[i].give_up === "1") {
+          break;
+        }
+        pastAnswers[i] = data.attempts[i].student_answer;
+      }
+
+      pastAnswers = pastAnswers.slice(0, 2);
+      commit('setPastAnswers', pastAnswers.reverse());
     }
   },
   async GetUserStats({commit, getters}) {
@@ -184,6 +206,10 @@ const actions = {
       let problems = JSON.parse(response.data);
       for (let i = 0; i < problems.length; i++) {
         let problemTextShortened = problems[i].problem_text.replace(/\\\\/g, "\\").replace(/\\"/g, "'");
+
+        if (problems[i].problem_type === "mc" || problems[i].problem_type === "ms") {
+          problemTextShortened = problemTextShortened.split("||||||||||")[0];
+        }
 
         if (problemTextShortened.length > 200) {
           problemTextShortened = problemTextShortened.slice(0, 200);
@@ -214,7 +240,7 @@ const actions = {
           solution: problems[i].solution.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
           solutionDiagram: (problems[i].solution_diagram === null) ? null : problems[i].solution_diagram.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
           hintOne: problems[i].hint_one.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
-          hintTwo: (problems[i].hint_two === null) ? null : problems[i].hint_two.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+          hintTwo: problems[i].hint_two.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
           difficulty: problems[i].difficulty,
           topic: problems[i].topic,
           mainFocus: problems[i].main_focus,
@@ -225,10 +251,12 @@ const actions = {
           calculus: problems[i].calculus,
           problemErrors: problems[i].problem_errors,
           pastAttempts: problems[i].attempts,
+          problemType: problems[i].problem_type,
+          resources: problems[i].resources,
           active: problems[i].active
         };
       }
-      commit('setPastProblems', problems)
+      commit('setPastProblems', problems, {root: true})
     });
   },
   async GetSubmittedProblems({commit, getters}) {
@@ -236,6 +264,10 @@ const actions = {
       let problems = JSON.parse(response.data);
       for (let i = 0; i < problems.length; i++) {
         let problemTextShortened = problems[i].problem_text.replace(/\\\\/g, "\\").replace(/\\"/g, "'");
+
+        if (problems[i].problem_type === "mc" || problems[i].problem_type === "ms") {
+          problemTextShortened = problemTextShortened.split("||||||||||")[0];
+        }
 
         if (problemTextShortened.length > 200) {
           problemTextShortened = problemTextShortened.slice(0, 200);
@@ -252,9 +284,11 @@ const actions = {
           sourceName = getters.ProblemMetaData.sources.filter(function(source) {return source.source_id === problems[i].source})[0].source;
         }
 
+        let problemText = problems[i].problem_text.replace(/\\\\/g, "\\").replace(/\\"/g, "'");
+
         problems[i] = {
           problemID: problems[i].problem_id,
-          problemText: problems[i].problem_text.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+          problemText: problemText.split("||||||||||")[0],
           problemTextShortened: problemTextShortened,
           diagram: (problems[i].diagram === null) ? null : problems[i].diagram.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
           answer: problems[i].answer.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
@@ -263,7 +297,7 @@ const actions = {
           solution: problems[i].solution.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
           solutionDiagram: (problems[i].solution_diagram === null) ? null : problems[i].solution_diagram.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
           hintOne: problems[i].hint_one.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
-          hintTwo: (problems[i].hint_two === null) ? null : problems[i].hint_two.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
+          hintTwo: problems[i].hint_two.replace(/\\\\/g, "\\").replace(/\\"/g, "'"),
           difficulty: problems[i].difficulty,
           topic: problems[i].topic,
           mainFocus: problems[i].main_focus,
@@ -272,10 +306,13 @@ const actions = {
           sourceName: sourceName,
           problemNumber: problems[i].number_in_source,
           calculus: problems[i].calculus,
-          problemErrors: problems[i].problem_errors
+          problemErrors: problems[i].problem_errors,
+          problemType: problems[i].problem_type,
+          resources: problems[i].resources,
+          mcOptions: problems[i].problem_type === "sa" ? ["", "", "", ""] : problemText.split("||||||||||")[1].split("|||||")
         };
       }
-      commit('setSubmittedProblems', problems)
+      commit('setSubmittedProblems', problems, {root: true})
     });
   },
   async SubmitProblem({commit, getters}) {
@@ -289,8 +326,17 @@ const actions = {
       });
     }
 
+    // Append multiple choice options to problem text string if relevant
+    let problemText = getters.CurrSubmission.problemText;
+    if (getters.CurrSubmission.problemType === "mc" || getters.CurrSubmission.problemType === "ms") {
+      problemText += "|||||";
+      getters.CurrSubmission.mcOptions.forEach(function(option) {
+        problemText += "|||||" + option;
+      });
+    }
+
     await axios.post("wp-json/physics_genie/submit-problem", JSON.stringify({
-      problem_text: getters.CurrSubmission.problemText,
+      problem_text: problemText,
       diagram: (getters.CurrSubmission.diagramType === "file" ? getters.CurrSubmission.diagramFile.text : (getters.CurrSubmission.diagramType === "code" ? getters.CurrSubmission.diagram : "")),
       answer: getters.CurrSubmission.answer,
       must_match: getters.CurrSubmission.mustMatch ? "true" : "false",
@@ -305,7 +351,9 @@ const actions = {
       calculus: getters.CurrSubmission.calculus,
       topic: getters.CurrSubmission.topic,
       main_focus: getters.CurrSubmission.mainFocus,
-      other_foci: getters.CurrSubmission.otherFoci
+      other_foci: getters.CurrSubmission.otherFoci,
+      problem_type: getters.CurrSubmission.problemType,
+      resources: getters.CurrSubmission.resources
     }), {'Content-Type': 'application/json', headers: {'Authorization': 'Bearer ' + getters.Token}}).then(() => {
       commit('setCurrSubmission', {
         problemID: null,
@@ -314,65 +362,9 @@ const actions = {
         diagramFile: null,
         diagramType: "file",
         hintOne: "",
+        hintOneInclude: true,
         hintTwo: "",
-        hintTwoInclude: true,
-        answer: "",
-        mustMatch: false,
-        error: 5,
-        solution: "",
-        solutionDiagram: "",
-        solutionDiagramFile: null,
-        solutionDiagramType: "none",
-        topic: "",
-        mainFocus: "",
-        otherFoci: [],
-        source: "",
-        category: "",
-        author: "",
-        sourceOther: "",
-        problemNumber: "",
-        difficulty: null,
-        calculus: "None"
-      });
-    });
-  },
-  async EditProblem({commit, getters}) {
-    // Getting list of user-reported errors that were addressed and that were marked as "Technical Error" and putting problem_error_ids in errorsAddressed 2d array
-    let errorsAddressed = [];
-    for (let i = 0; i < getters.CurrSubmissionEdit.problemErrors.length; i++) {
-      let error = getters.CurrSubmissionEdit.problemErrors[i];
-      errorsAddressed.push([error.problem_error_id, error.addressedState]);
-    }
-
-    await axios.put("wp-json/physics_genie/edit-problem", JSON.stringify({
-      problem_id: getters.CurrSubmissionEdit.problemID,
-      problem_text: getters.CurrSubmissionEdit.problemText,
-      diagram: (getters.CurrSubmissionEdit.diagramType === "file" ? getters.CurrSubmissionEdit.diagramFile.text : (getters.CurrSubmissionEdit.diagramType === "code" ? getters.CurrSubmissionEdit.diagram : "")),
-      answer: getters.CurrSubmissionEdit.answer,
-      must_match: getters.CurrSubmissionEdit.mustMatch ? "true" : "false",
-      error: this.functions.testAlgebraic(getters.CurrSubmissionEdit.answer) ? 0 : getters.CurrSubmissionEdit.error,
-      solution: getters.CurrSubmissionEdit.solution,
-      solution_diagram: (getters.CurrSubmissionEdit.solutionDiagramType === "file" ? getters.CurrSubmissionEdit.solutionDiagramFile.text : (getters.CurrSubmissionEdit.solutionDiagramType === "code" ? getters.CurrSubmissionEdit.solutionDiagram : "")),
-      hint_one: getters.CurrSubmissionEdit.hintOne,
-      hint_two: getters.CurrSubmissionEdit.hintTwo,
-      source: getters.CurrSubmissionEdit.source,
-      number_in_source: getters.CurrSubmissionEdit.problemNumber,
-      difficulty: getters.CurrSubmissionEdit.difficulty,
-      calculus: getters.CurrSubmissionEdit.calculus,
-      topic: getters.CurrSubmissionEdit.topic,
-      main_focus: getters.CurrSubmissionEdit.mainFocus,
-      other_foci: getters.CurrSubmissionEdit.otherFoci,
-      errors_addressed: errorsAddressed
-    }), {'Content-Type': 'application/json', headers: {'Authorization': 'Bearer ' + getters.Token}}).then(() => {
-      commit('setCurrSubmissionEdit', {
-        problemID: null,
-        problemText: "",
-        diagram: "",
-        diagramFile: null,
-        diagramType: "file",
-        hintOne: "",
-        hintTwo: "",
-        hintTwoInclude: true,
+        hintTwoInclude: false,
         answer: "",
         mustMatch: false,
         error: 5,
@@ -390,20 +382,85 @@ const actions = {
         problemNumber: "",
         difficulty: null,
         calculus: "None",
-        problemErrors: []
+        problemType: "sa",
+        resources: "",
+        mcOptions: ["", "", "", ""]
       });
     });
   },
-  async SubmitAttempt({getters}, result) {
-    await axios.post("wp-json/physics_genie/submit-attempt", JSON.stringify({
-      problem_id: getters.CurrProblem.problemID,
-      num_attempts: getters.PastAnswers.length,
-      correct: result === "correct" ? "true" : "false",
-      topic: getters.CurrProblem.topic,
-      focus: getters.CurrProblem.mainFocus,
-      difficulty: getters.CurrProblem.difficulty,
-    }), {'Content-Type': 'application/json', headers: {'Authorization': 'Bearer ' + getters.Token}});
-  }
+  async EditProblem({commit, getters}) {
+    // Getting list of user-reported errors that were addressed and that were marked as "Technical Error" and putting problem_error_ids in errorsAddressed 2d array
+    let errorsAddressed = [];
+    for (let i = 0; i < getters.CurrSubmissionEdit.problemErrors.length; i++) {
+      let error = getters.CurrSubmissionEdit.problemErrors[i];
+      errorsAddressed.push([error.problem_error_id, error.addressedState]);
+    }
+
+    // Append multiple choice options to problem text string if relevant
+    let problemText = getters.CurrSubmissionEdit.problemText;
+    if (getters.CurrSubmissionEdit.problemType === "mc" || getters.CurrSubmissionEdit.problemType === "ms") {
+      problemText += "|||||";
+      getters.CurrSubmissionEdit.mcOptions.forEach(function(option) {
+        problemText += "|||||" + option;
+      });
+    }
+
+    await axios.put("wp-json/physics_genie/edit-problem", JSON.stringify({
+      problem_id: getters.CurrSubmissionEdit.problemID,
+      problem_text: problemText,
+      diagram: (getters.CurrSubmissionEdit.diagramType === "file" ? getters.CurrSubmissionEdit.diagramFile.text : (getters.CurrSubmissionEdit.diagramType === "code" ? getters.CurrSubmissionEdit.diagram : "")),
+      answer: getters.CurrSubmissionEdit.answer,
+      must_match: getters.CurrSubmissionEdit.mustMatch ? "true" : "false",
+      error: this.functions.testAlgebraic(getters.CurrSubmissionEdit.answer) ? 0 : getters.CurrSubmissionEdit.error,
+      solution: getters.CurrSubmissionEdit.solution,
+      solution_diagram: (getters.CurrSubmissionEdit.solutionDiagramType === "file" ? getters.CurrSubmissionEdit.solutionDiagramFile.text : (getters.CurrSubmissionEdit.solutionDiagramType === "code" ? getters.CurrSubmissionEdit.solutionDiagram : "")),
+      hint_one: getters.CurrSubmissionEdit.hintOne,
+      hint_two: getters.CurrSubmissionEdit.hintTwo,
+      source: getters.CurrSubmissionEdit.source,
+      number_in_source: getters.CurrSubmissionEdit.problemNumber,
+      difficulty: getters.CurrSubmissionEdit.difficulty,
+      calculus: getters.CurrSubmissionEdit.calculus,
+      topic: getters.CurrSubmissionEdit.topic,
+      main_focus: getters.CurrSubmissionEdit.mainFocus,
+      other_foci: getters.CurrSubmissionEdit.otherFoci,
+      problem_type: getters.CurrSubmissionEdit.problemType,
+      resources: getters.CurrSubmissionEdit.resources,
+      errors_addressed: errorsAddressed
+    }), {'Content-Type': 'application/json', headers: {'Authorization': 'Bearer ' + getters.Token}}).then(() => {
+      commit('setCurrSubmissionEdit', {
+        problemID: null,
+        problemText: "",
+        diagram: "",
+        diagramFile: null,
+        diagramType: "file",
+        hintOne: "",
+        hintOneInclude: true,
+        hintTwo: "",
+        hintTwoInclude: false,
+        answer: "",
+        mustMatch: false,
+        error: 5,
+        solution: "",
+        solutionDiagram: "",
+        solutionDiagramFile: null,
+        solutionDiagramType: "none",
+        topic: "",
+        mainFocus: "",
+        otherFoci: [],
+        source: "",
+        category: "",
+        author: "",
+        sourceOther: "",
+        problemNumber: "",
+        difficulty: null,
+        calculus: "None",
+        problemErrors: [],
+        problemType: "sa",
+        resources: "",
+        mcOptions: ["", "", "", ""]
+      });
+    });
+  },
 };
 const mutations = {
   setProcessing(state, processing) {
@@ -437,12 +494,6 @@ const mutations = {
   },
   setUserStats(state, stats) {
     state.userStats = stats;
-  },
-  setPastProblems(state, problems) {
-    state.pastProblems = problems;
-  },
-  setSubmittedProblems(state, problems) {
-    state.submittedProblems = problems;
   },
   setCurrSubmission(state, currSubmission) {
     state.currSubmission = currSubmission;

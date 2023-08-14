@@ -60,6 +60,8 @@
           mainFocus: "",
           mainFocusName: "",
           otherFoci: [],
+          problemType: "sa",
+          resources: ""
         }
       }
     },
@@ -122,8 +124,13 @@
               otherFoci: data.other_foci,
               source: source,
               problemNumber: data.number_in_source,
-              problemErrors: data.problem_errors
+              problemErrors: data.problem_errors,
+              problemType: data.problem_type,
+              resources: data.resources,
+              completed: data.active
             };
+
+            console.log(self.problem);
           }
         });
       }

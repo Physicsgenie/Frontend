@@ -4,11 +4,12 @@
       <div class = "header">
         <h2 v-if = "data.type === 'problemText'">Problem <span class = "smaller">(LaTeX)</span></h2>
         <h2 v-else-if = "data.type === 'solution'">Solution <span class = "smaller">(LaTeX)</span></h2>
+        <h2 v-else-if = "data.type === 'resources'">Resources <span class = "smaller">(LaTeX)</span></h2>
         <h2 v-else-if = "data.type === 'diagram' || data.type === 'diagramFile'">Diagram <span class = "smaller">(svg)</span></h2>
         <h2 v-else>Solution Diagram <span class = "smaller">(svg)</span></h2>
         <button class = "return button orange" v-on:click = "exit"><i class = "fa fa-paper-plane"></i>Save and Exit</button>
       </div>
-      <textarea v-if = "data.type !== 'diagramFile' && data.type !== 'solutionDiagramFile'" type = "text" v-model = "data.text"></textarea>
+      <textarea v-if = "data.type !== 'diagramFile' && data.type !== 'solutionDiagramFile'" v-model = "data.text"></textarea>
       <div class = "output" v-bind:style = "(data.type === 'diagramFile' || data.type === 'solutionDiagramFile') ? {height: '100%'} : {height: showOutput ? '20%' : '0', overflow: showOutput ? 'auto' : 'hidden', borderTop: '1px solid rgb(29, 34, 41)', marginTop: '20px'}">
         <button v-if = "data.type !== 'diagramFile' && data.type !== 'solutionDiagramFile'" v-on:click = "toggleOutput">Output<i class = "fa fa-angle-down" v-bind:style = "{transform: showOutput ? 'rotate(0deg)' : 'rotate(-180deg)'}"></i></button>
         <p v-if = "data.type === 'problemText' || data.type === 'solution'"><vue-mathjax :formula = "data.text" v-bind:options = "{tex2jax: {inlineMath: [['$', '$']]}, showProcessingMessages: false}"></vue-mathjax></p>

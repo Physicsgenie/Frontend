@@ -93,6 +93,7 @@ import Menu from "../components/Menu";
 import User from "../components/User";
 import Problem from "../components/Problem";
 import {VueMathjax} from 'vue-mathjax'
+import {mapGetters} from "vuex";
 
 export default {
   name: "Submit",
@@ -104,13 +105,15 @@ export default {
   },
   data() {
     return {
-      problems: this.$store.getters.SubmittedProblems,
       problemPreview: null,
-      submitData: this.$store.getters.ProblemMetaData,
       viewType: 'list'
     }
   },
   computed: {
+    ...mapGetters({
+      problems: 'SubmittedProblems',
+      submitData: 'ProblemMetaData'
+    }),
     numberOfFoci() {
       let foci = [];
       for (let i = 0; i < this.problems.length; i++) {
@@ -139,7 +142,16 @@ export default {
 
     // previewProblem (problem => problem to preview), sets current previewed problem to the one passed to this function
     previewProblem: function(problem) {
-      this.problemPreview = problem;
+      let problemText = problem.problemText;
+      if (problem.problemType === "mc" || problem.problemType === "ms") {
+        problemText += "|||||";
+        problem.mcOptions.forEach(function(option) {
+          problemText += "|||||" + option;
+        });
+      }
+
+      this.problemPreview = JSON.parse(JSON.stringify(problem));
+      this.problemPreview.problemText = problemText;
     },
 
     // edit (problemId => problem ID of problem to edit), goes to edit portal for problem with passed-in problem ID
